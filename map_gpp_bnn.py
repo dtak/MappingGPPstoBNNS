@@ -178,17 +178,6 @@ if __name__ == '__main__':
         plt.draw()
         plt.pause(1.0/60.0)
 
-    init_mean = rs.randn(num_weights)
-    init_log_std = -5 * np.ones(num_weights)
-    init_var_params = np.concatenate([init_mean, init_log_std])
-
-    prior_params = adam(grad_kl, init_var_params, step_size=0.1,
-                        num_iters=iters_1, callback=callback1)
-
-    #prior_params = init_var_params
-    #print(var_prior_params.shape)
-    #print(prior_params)
-
     log_posterior = lambda weights, t: log_post(weights, inputs, targets, prior_params)
     elbo, grad_elbo, unpack_params = elbo_inference(log_posterior, N_weights=num_weights,
                                                     N_samples=samples)
