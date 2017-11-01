@@ -39,8 +39,8 @@ def elbo_inference(logprob, N_weights, N_samples):
 
     def elbo_objective(params, t):
         """
-        Provides a stochastic estimate of the evidence lower bound
-        ELBO = H[q(w)] + E_q(w)[p(N_weights|w)]
+        Provides a stochastic estimate of the variational lower bound (with the learned prior)
+        ELBO = E_q(w)[p(D|w)] + KL[q(w)|q(w|phi)]
 
         params                                                  dim = [2*N_weights]
         mean, log_std                                           dim = [N_weights]
