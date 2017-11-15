@@ -13,7 +13,7 @@ def kl_inference(log_gp_prior, N_weights, N_samples):
     def kl_objective(params, t):
         """
         Provides a stochastic estimate of the kl divergence
-        between p_BNN(f|phi) and p_GP(f|theta)
+        kl= E_{p_BNN(f|phi)} [log p_BNN(f|phi) -log p_GP(f|theta)]
         mean, log_std                                           dim = [N_weights]
         samples                                                 dim = [N_samples, N_weights]
         kl                                                      dim = [1]
@@ -22,7 +22,7 @@ def kl_inference(log_gp_prior, N_weights, N_samples):
 
         prior_mean, prior_log_std = unpack_params(params)
         samples = rs.randn(N_samples, N_weights) * np.exp(prior_log_std) + prior_mean
-        kl = -np.mean(log_gp_prior(samples, t))
+        kl = - np.mean(log_gp_prior(samples, t))
         return kl
 
     grad_kl = grad(kl_objective)
@@ -41,7 +41,7 @@ def vlb_inference(logprob, N_weights, N_samples):
     def vlb_objective(params, t):
         """
         Provides a stochastic estimate of the variational lower bound
-        ELBO = E_q(w)[p(D|w)] + KL[q(w)|p(w)]
+        ELBO = -E_q(w)[p(D|w)] - KL[q(w)|p(w)]
 
         params                                                  dim = [2*N_weights]
         mean, log_std                                           dim = [N_weights]
@@ -56,6 +56,7 @@ def vlb_inference(logprob, N_weights, N_samples):
     grad_vlb = grad(vlb_objective)
 
     return vlb_objective, grad_vlb, unpack_params
+
 
 def gan_inference(gan_log_prob, N_weights, N_samples):
 

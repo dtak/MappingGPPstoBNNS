@@ -18,14 +18,14 @@ if __name__ == '__main__':
     rbf = lambda x: np.exp(-x**2)
     relu = lambda x: np.maximum(x, 0.)
 
-    exp_num = 12
+    exp_num = 20
     data = 'xsinx'  # or expx or cosx
-    N_data = 70
+    N_data = 400
     samples = 20
-    iters_1 = 50
-    iters_2 = 150
+    iters_1 = 20
+    iters_2 = 50
 
-    save_plot = False
+    save_plot = True
     plot_during_training = True
 
     num_weights, predictions, _, log_p_gp, log_post = morph_bnn(layer_sizes=[1, 20, 20, 1],
@@ -33,12 +33,7 @@ if __name__ == '__main__':
 
     inputs, targets = build_toy_dataset(data, n_data=N_data)
 
-    # X ~ P(X) SAMPLE FROKM DATA DISTRIBUTION
-    s1_inputs = np.linspace(-8, 8, num=140)
-    x_plot = np.linspace(-8, 8, num=400)
-    X = inputs
-
-    log_gp_prior = lambda w, t: log_p_gp(w, X)
+    log_gp_prior = lambda w, t: log_p_gp(w, N_data)
     kl, grad_kl, unpack_params = kl_inference(log_gp_prior,
                                               N_weights=num_weights,
                                               N_samples=20)
@@ -87,7 +82,7 @@ if __name__ == '__main__':
     # dependent on which initialization scheme used here
 
     init_mean = rs.randn(num_weights)
-    init_log_std = 0.25 * np.ones(num_weights)
+    init_log_std = -1.5 * np.ones(num_weights)
     #init_log_std = -1.5*rs.randn(num_weights)
     init_var_params = np.concatenate([init_mean, init_log_std])
 
@@ -98,14 +93,14 @@ if __name__ == '__main__':
     prior_params = adam(grad_kl, init_var_params,
                         step_size=0.1, num_iters=iters_1, callback=callback1)
 
-    # --------------------- MAXIMIZE THE ELBO -----------------------------------
+    # --------------------- MINIMIZE THE VLB -----------------------------------
 
     print(np.round(prior_params-init_var_params, 3))
     title = "optimizing vlb"
 
     log_posterior = lambda weights, t: log_post(weights, inputs, targets, prior_params)
     vlb, grad_vlb, unpack_params = vlb_inference(log_posterior, N_weights=num_weights,
-                                                                   N_samples=samples)
+                                                                N_samples=samples)
     print(title)
     callback2 = lambda params, t, g: callback(params, t, g, title, vlb)
 

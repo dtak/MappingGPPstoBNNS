@@ -42,6 +42,17 @@ def morph_gan(bnn_layer_sizes,
             inputs = bnn_nonlinearity(outputs)
         return outputs[:, :, 0]
 
+    def sample_gp_prior(x, n_samples):
+        """ Samples from the gp prior x = inputs with shape [N_data]
+        returns : samples from the gp prior [N_samples, N_data] """
+        x = np.ravel(x)
+        n_data = len(x)
+        K = covariance(x[:, None], x[:, None])
+        L = cholesky(K + 1e-4 * np.eye(n_data))
+        e = np.random.normal(size=(n_data, n_samples))
+        f_gp_prior = np.dot(L, e)
+        return f_gp_prior.T
+
     def batch_normalize(activations):  # not used for regression exp
         mbmean = np.mean(activations, axis=0, keepdims=True)
         s = (np.std(activations, axis=0, keepdims=True) + 1)
@@ -57,25 +68,17 @@ def morph_gan(bnn_layer_sizes,
         outputs = np.dot(inputs, outW) + outb
         return outputs
 
-    def gan_log_prob(bnn_weights, d_params, gp_samples, inputs):
-        bnn_samples = bnn_predict(bnn_weights, inputs)
+    def gan_log_prob(bnn_weights, d_params, n_data, n_samples):
+        x = np.random.uniform(size=(n_data, 1))  # sample X ~ P(X)
+        bnn_samples = bnn_predict(bnn_weights, x)  # sample f ~ P_bnn(f)
+        gp_samples = sample_gp_prior(x, n_samples)  # sample f ~ P_gp(f)
         logprobs_bnn = logsigmoid(nn_predict(d_params, bnn_samples))
         logprobs_gp = logsigmoid(nn_predict(d_params, gp_samples))
         log_prob = logprobs_gp - logprobs_bnn
         return log_prob
 
-    return n_bnn_weights, gan_log_prob, bnn_predict, nn_predict
+    return n_bnn_weights, gan_log_prob, bnn_predict, nn_predict, sample_gp_prior
 
-def sample_functions_gp_prior(x, n_samples):
-    """ Samples from the gp prior x = inputs with shape [N_data]
-    returns : samples from the gp prior [N_samples, N_data] """
-    x=np.ravel(x)
-    n_data = len(x)
-    K = covariance(x[:, None], x[:, None])
-    L = cholesky(K + 1e-4 * np.eye(n_data))
-    e = np.random.normal(size=(n_data, n_samples))
-    f_gp_prior = np.dot(L, e)
-    return f_gp_prior.T
 
 def init_nn_params(scale, layer_sizes, rs=npr.RandomState(0)):
     """Build a list of (weights, biases) for each nn layer"""
@@ -91,16 +94,15 @@ def init_bnn_params(num_weights, scale=-2):
     return init_var_params
 
 if __name__ == '__main__':
-    # Model hyper-parameters
     rs = npr.RandomState(0)
     data = "xsinx"
-    n_data = 100
-    samples = 15
+    n_data = 200
+    samples = 5
     save_plots = False
     plot_during = True
 
     gen_layer_sizes = [1, 10, 10, 1]
-    dsc_layer_sizes = [n_data, 50, 1]
+    dsc_layer_sizes = [n_data, 200, 1]
 
     # Training parameters
     param_scale = 0.01
@@ -110,14 +112,12 @@ if __name__ == '__main__':
     step_size_max = 0.01
     step_size_min = 0.01
 
-    # SAMPLE X ~ P(X) HERE AS WELL AS f ~ p_gp(f)
     x, y = build_toy_dataset(data, n_data)
-    # x = np.linspace(-8, 8, num=n_data).reshape(-1, 1)
-    gp_samples = sample_functions_gp_prior(x, 15)
 
-    n_bnn_weights, gan_log_prob, bnn_predict, nn_predict = morph_gan(bnn_layer_sizes=gen_layer_sizes)
-    log_prob = lambda bnn_w, d_param, t: gan_log_prob(bnn_w, d_param, gp_samples, x)
+    n_bnn_weights, gan_log_prob, \
+    bnn_predict, nn_predict, sample_gp = morph_gan(bnn_layer_sizes=gen_layer_sizes)
 
+    log_prob = lambda bnn_w, d_param, t: gan_log_prob(bnn_w, d_param, n_data, samples)
     gan_objective, grad_gan, unpack_params = gan_inference(log_prob, n_bnn_weights, samples)
 
     # set up fig
@@ -134,7 +134,7 @@ if __name__ == '__main__':
         mean, log_std = unpack_params(gen_params)
         sample_weights = rs.randn(n_samples, n_bnn_weights) * np.exp(log_std) + mean
         f_bnn = bnn_predict(sample_weights, plot_inputs[:, None]).T
-        f_gp = sample_functions_gp_prior(plot_inputs, n_samples).T
+        f_gp = sample_gp(plot_inputs, n_samples).T
 
         # Plot functions.
         if plot_during:
@@ -150,7 +150,7 @@ if __name__ == '__main__':
 
 
     # INITIALIZE THE PARAMETERS
-    init_gen_params = init_bnn_params(n_bnn_weights, scale=-2)
+    init_gen_params = init_bnn_params(n_bnn_weights, scale=-1.5)
     init_dsc_params = init_nn_params(param_scale, dsc_layer_sizes)
 
     optimized_params = adam_minimax(grad_gan, init_gen_params, init_dsc_params,

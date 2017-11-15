@@ -5,7 +5,7 @@ from kernels import covariance
 
 
 def morph_bnn(layer_sizes, nonlinearity=np.tanh,
-              noise_var=0.01, L2_reg=0.1, kernel="rbf"):
+              noise_var=0.01, L2_reg=0.1):
 
     shapes = list(zip(layer_sizes[:-1], layer_sizes[1:]))
     N_weights = sum((m+1)*n for m, n in shapes)
@@ -59,7 +59,7 @@ def morph_bnn(layer_sizes, nonlinearity=np.tanh,
         log_lik = -np.sum((preds - targets)**2, axis=1)[:, 0] / noise_var
         return log_prior + log_lik
 
-    def log_gp_prior(bnn_weights, inputs):
+    def log_gp_prior(bnn_weights, n_data):
         """
         computes: the expectation value of the log of the gp prior :
         E_{X~p(X)} [log p_gp(f)] where p_gp(f) = N(f|0,K) where f ~ p_BNN(f)
@@ -77,8 +77,7 @@ def morph_bnn(layer_sizes, nonlinearity=np.tanh,
 
         returns : E[log p_gp(f)]                        dim = [N_function_samples]
         """
-
-        x = inputs
+        x = np.random.uniform(size=(n_data, 1))
         f_bnn = predictions(bnn_weights, x)[:, :, 0].T
         K = covariance(x, x)+1e-7*np.eye(len(x))
         L = cholesky(K)
