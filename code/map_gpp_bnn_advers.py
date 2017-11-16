@@ -9,6 +9,7 @@ from kernels import covariance
 from util import build_toy_dataset
 from blackbox_svi import gan_inference
 from autograd.numpy.linalg import solve, cholesky
+import seaborn as sns
 def rbf(x): return np.exp(-x**2)
 def relu(x): return np.maximum(0, x)
 def sigmoid(x): return 0.5 * (np.tanh(x) + 1.0)
@@ -69,7 +70,7 @@ def morph_gan(bnn_layer_sizes,
         return outputs
 
     def gan_log_prob(bnn_weights, d_params, n_data, n_samples):
-        x = np.random.uniform(size=(n_data, 1))  # sample X ~ P(X)
+        x = np.random.normal(size=(n_data, 1))  # sample X ~ P(X)
         bnn_samples = bnn_predict(bnn_weights, x)  # sample f ~ P_bnn(f)
         gp_samples = sample_gp_prior(x, n_samples)  # sample f ~ P_gp(f)
         logprobs_bnn = logsigmoid(nn_predict(d_params, bnn_samples))
@@ -97,12 +98,12 @@ if __name__ == '__main__':
     rs = npr.RandomState(0)
     data = "xsinx"
     n_data = 200
-    samples = 5
+    samples = 15
     save_plots = False
     plot_during = True
 
-    gen_layer_sizes = [1, 10, 10, 1]
-    dsc_layer_sizes = [n_data, 200, 1]
+    gen_layer_sizes = [1, 20, 20, 1]
+    dsc_layer_sizes = [n_data, 50, 25, 1]
 
     # Training parameters
     param_scale = 0.01
@@ -111,8 +112,6 @@ if __name__ == '__main__':
 
     step_size_max = 0.01
     step_size_min = 0.01
-
-    x, y = build_toy_dataset(data, n_data)
 
     n_bnn_weights, gan_log_prob, \
     bnn_predict, nn_predict, sample_gp = morph_gan(bnn_layer_sizes=gen_layer_sizes)
@@ -128,13 +127,13 @@ if __name__ == '__main__':
         plt.show(block=False)
 
     def callback(gen_params, dsc_params, iter, gen_gradient, dsc_gradient):
-        # Sample functions from prior or posterior f ~ p(f|phi) or p(f|varphi)
+        # Sample functions from prior f ~ p(f|phi) or p(f|varphi)
         n_samples = 3
         plot_inputs = np.linspace(-8, 8, num=100)
         mean, log_std = unpack_params(gen_params)
         sample_weights = rs.randn(n_samples, n_bnn_weights) * np.exp(log_std) + mean
-        f_bnn = bnn_predict(sample_weights, plot_inputs[:, None]).T
-        f_gp = sample_gp(plot_inputs, n_samples).T
+        f_bnn = bnn_predict(sample_weights, plot_inputs[:, None]).T  # f ~ p_bnn (f)
+        f_gp = sample_gp(plot_inputs, n_samples).T                   # f ~ p_gp  (f)
 
         # Plot functions.
         if plot_during:
