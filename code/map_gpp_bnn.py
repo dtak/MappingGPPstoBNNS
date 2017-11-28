@@ -7,7 +7,7 @@ from blackbox_svi import kl_inference, vlb_inference
 from util import covariance, build_toy_dataset
 import plotting
 from plotting import plot_mean_std, plot_priors, plot_deciles, plot_samples
-from models import morph_bnn
+from models import map_gpp_bnn, construct_bnn
 import os
 import seaborn as sns
 sns.set_style('white')
@@ -15,124 +15,152 @@ rs = npr.RandomState(0)
 
 if __name__ == '__main__':
     rs = npr.RandomState(0)
+
+    # define nonlinearity here
     rbf = lambda x: np.exp(-x**2)
     relu = lambda x: np.maximum(x, 0.)
+    sigmoid =lambda x: 0.5*(np.tanh(x)**2-1)
 
-    exp_num = 20
+    exp_num = 26
     data = 'xsinx'  # or expx or cosx
-    N_data = 400
+    N_data = 70
     samples = 20
-    iters_1 = 20
-    iters_2 = 50
+    iters_1 = 500
+    iters_2 = 100
 
-    save_plot = True
-    plot_during_training = True
+    save_plot = False
+    plot_during = True
 
-    num_weights, predictions, _, log_p_gp, log_post = morph_bnn(layer_sizes=[1, 20, 20, 1],
-                                                                nonlinearity=rbf)
+    num_weights, bnn_predict, unpack_params,\
+    kl, grad_kl = map_gpp_bnn(layer_sizes=[1, 30, 1], nonlinearity=np.tanh)
 
     inputs, targets = build_toy_dataset(data, n_data=N_data)
 
-    log_gp_prior = lambda w, t: log_p_gp(w, N_data)
-    kl, grad_kl, unpack_params = kl_inference(log_gp_prior,
-                                              N_weights=num_weights,
-                                              N_samples=20)
+    def init_bnn_params(N_weights, scale=-5):
+        """initial mean and log std of q(w) ~ N(w|mean,std)"""
+        mean = rs.randn(N_weights)
+        log_std = scale * np.ones(N_weights)
+        return np.concatenate([mean, log_std])
 
-    # set up fig
-    if plot_during_training:
-        fig = plt.figure(facecolor='white')
-        ax = fig.add_subplot(111, frameon=False)
+    def sample_gp_prior(x, n_samples):
+        """ Samples from the gp prior x = inputs with shape [N_data]
+        returns : samples from the gp prior [N_data, N_samples] """
+        x = np.ravel(x)
+        n_data = len(x)
+        K = covariance(x[:, None], x[:, None])
+        L = cholesky(K + 1e-7 * np.eye(n_data))
+        e = rs.randn(n_data, n_samples)
+        return np.dot(L, e)
+
+    def sample_bnn(x, n_samples, params=None):
+        """samples functions from a bnn"""
+        if params is not None:  # sample learned learned prior var params
+            mean, log_std = unpack_params(params)
+            bnn_weights = rs.randn(n_samples, num_weights) * np.exp(log_std) + mean
+        else:  # sample standard normal prior weights
+            bnn_weights = rs.randn(n_samples, num_weights)
+        return bnn_predict(bnn_weights, x[:, None])[:, :, 0].T
+
+
+    if plot_during:
+        f, ax = plt.subplots(3, sharex=True)
         plt.ion()
         plt.show(block=False)
 
-    def callback(params, t, g, title, objective):
-        # Sample functions from prior or posterior f ~ p(f|phi) or p(f|varphi)
-        N_samples = 3
-        mean, log_std = unpack_params(params)
-        sample_weights = rs.randn(N_samples, num_weights) * np.exp(log_std) + mean
-        plot_inputs = np.linspace(-8, 8, num=400)
-        outputs = predictions(sample_weights, np.expand_dims(plot_inputs, 1))
-        p = outputs[:, :, 0].T
+    def callback_kl(prior_params, iter, g):
+        # Sample functions from priors f ~ p(f)
+        n_samples = 3
+        plot_inputs = np.linspace(-8, 8, num=100)
 
-        if "prior" in title:
-            N_data = len(plot_inputs)
-            K = covariance(plot_inputs[:, None], plot_inputs[:, None])
-            L = cholesky(K + 1e-7 * np.eye(N_data))
-            e = np.random.normal(size=(N_data, N_samples))
-            f_gp_prior = np.dot(L, e)
+        f_bnn_gpp = sample_bnn(plot_inputs, n_samples, prior_params)    # f ~ p_bnn (f|phi)
+        f_bnn     = sample_bnn(plot_inputs, n_samples)                  # f ~ p_bnn (f)
+        f_gp      = sample_gp_prior(plot_inputs, n_samples)             # f ~ p_gp  (f)
 
-        # Plot data and functions.
-        if plot_during_training:
-            plt.cla()
-            ax.plot(inputs.ravel(), targets.ravel(), 'ko')
-            ax.plot(plot_inputs, p, color='r')
-            if "prior" in title:
-                ax.plot(plot_inputs, f_gp_prior, color='g')
-            ax.set_title(title)
-            ax.set_ylim([-2, 3])
+        # Plot samples of functions from the bnn and gp priors.
+        if plot_during:
+            for axes in ax: axes.cla()  # clear plots
+            # ax.plot(x.ravel(), y.ravel(), 'ko')
+            ax[0].plot(plot_inputs, f_gp, color='green')
+            ax[1].plot(plot_inputs, f_bnn_gpp, color='red')
+            ax[2].plot(plot_inputs, f_bnn, color='blue')
+            #ax[0].set_ylim([-5, 5])
+            #ax[1].set_ylim([-5, 5])
+            #ax[2].set_ylim([-5, 5])
+
             plt.draw()
             plt.pause(1.0/40.0)
 
-        print("Iteration {} | objective {}".format(t, objective(params, t)))
+        print("Iteration {} KL {} ".format(iter, kl(prior_params, iter)))
 
     # ----------------------------------------------------------------
 
-    # Initialize the variational prior params HERE
+    # Initialize the variational prior params (phi) HERE for q(w|phi)
     # the functions drawn from the optimized bnn prior are heavily
     # dependent on which initialization scheme used here
 
-    init_mean = rs.randn(num_weights)
-    init_log_std = -1.5 * np.ones(num_weights)
-    #init_log_std = -1.5*rs.randn(num_weights)
-    init_var_params = np.concatenate([init_mean, init_log_std])
+    init_var_params = init_bnn_params(num_weights, scale=-0.5)
+
 
     # ---------------------- MINIMIZE THE KL --------------------------
 
-    title = "Optimizing the prior"
-    callback1 = lambda params, t, g: callback(params, t, g, title, kl)
+
     prior_params = adam(grad_kl, init_var_params,
-                        step_size=0.1, num_iters=iters_1, callback=callback1)
+                        step_size=0.15, num_iters=iters_1, callback=callback_kl)
+
 
     # --------------------- MINIMIZE THE VLB -----------------------------------
 
-    print(np.round(prior_params-init_var_params, 3))
-    title = "optimizing vlb"
 
-    log_posterior = lambda weights, t: log_post(weights, inputs, targets, prior_params)
-    vlb, grad_vlb, unpack_params = vlb_inference(log_posterior, N_weights=num_weights,
-                                                                N_samples=samples)
-    print(title)
-    callback2 = lambda params, t, g: callback(params, t, g, title, vlb)
+    min_vlb = False
 
-    init_mean = rs.randn(num_weights)
-    init_log_std = -5 * np.ones(num_weights)
-    init_var_params = np.concatenate([init_mean, init_log_std])
+    if min_vlb:
 
-    var_params = adam(grad_vlb, init_var_params,
-                      step_size=0.1, num_iters=iters_2, callback=callback2)
+        # set up fig
+        if plot_during:
+            fig = plt.figure(facecolor='white')
+            ax = fig.add_subplot(111)
+            plt.ion()
+            plt.show(block=False)
+
+
+        def callback(params, t, g, objective):
+            # Sample functions from posterior f ~ p(f|phi) or p(f|varphi)
+            N_samples = 5
+            plot_inputs = np.linspace(-8, 8, num=400)
+            f_bnn = sample_bnn(plot_inputs, N_samples, params)
+
+            # Plot data and functions.
+            if plot_during:
+                plt.cla()
+                ax.plot(inputs.ravel(), targets.ravel(), 'k.')
+                ax.plot(plot_inputs, f_bnn, color='r')
+                ax.set_title("fitting to toy data")
+                ax.set_ylim([-5, 5])
+                plt.draw()
+                plt.pause(1.0 / 60.0)
+
+            print("Iteration {} | vlb {}".format(t, -objective(params, t)))
+
+        log_posterior = lambda weights, t: log_post(weights, inputs, targets, prior_params)
+
+        vlb, grad_vlb, unpack_params = \
+            vlb_inference(log_posterior, N_weights=num_weights, N_samples=samples)
+
+        callback_vlb = lambda params, t, g: callback(params, t, g, vlb)
+
+        init_var_params = init_bnn_params(num_weights)
+
+        var_params = adam(grad_vlb, init_var_params,
+                          step_size=0.1, num_iters=iters_2, callback=callback_vlb)
 
     # PLOT STUFF BELOW HERE
 
     def get_prior_draws(x_plot, prior_param, samples=5):
-        N_data = len(x_plot)
-
-        # sample functions from the gp prior
-        K = covariance(x_plot[:, None], x_plot[:, None])
-        L = cholesky(K + 1e-7 * np.eye(N_data))
-        f_gp_prior = np.dot(L, np.random.normal(size=(N_data, samples)))
-
-        # sample functions from the bnn prior
-        prior_weights = rs.randn(samples, num_weights)
-        f_bnn_prior = predictions(prior_weights, x_plot[:, None])[:, :, 0].T
-
-        # sample from the optimized bnn prior
-        mean, log_std = unpack_params(prior_param)
-        sample_weights = rs.randn(samples, num_weights) * np.exp(log_std) + mean
-        f_gp_bnn_prior = predictions(sample_weights, x_plot[:, None])[:, :, 0].T
-
-        draws = (f_gp_prior, f_bnn_prior, f_gp_bnn_prior)
-
-        return draws
+        # sample functions from the gp, bnn, optimized bnn prior
+        f_bnn_gpp = sample_bnn(x_plot, samples, prior_param)    # f ~ p_bnn (f|phi)
+        f_bnn     = sample_bnn(x_plot, samples)                  # f ~ p_bnn (f)
+        f_gp      = sample_gp_prior(x_plot, samples)             # f ~ p_gp  (f)
+        return f_gp, f_bnn, f_bnn_gpp
 
     if save_plot:
         N_data = 400
@@ -147,13 +175,9 @@ if __name__ == '__main__':
         plot_priors(x_plot, prior_p, D, save_dir)
 
         # predictions from posterior of bnn
-        mean, log_std = unpack_params(var_params)
-        sample_weights = rs.randn(N_samples, num_weights) * np.exp(log_std) + mean
-        p = predictions(sample_weights, x_plot[:, None])[:, :, 0].T
+        p = sample_bnn(x_plot, N_samples, var_params)
 
         save_dir = os.path.join(os.getcwd(), 'plots', 'gpp-bnn', save_title+data)
-        # plot_samples(x_plot, p, D, save_dir, plot="gpp")
-        # plot_mean_std(x_plot, p, D, save_dir, plot="gpp")
         plot_deciles(x_plot, p, D, save_dir, plot="gpp")
 
 

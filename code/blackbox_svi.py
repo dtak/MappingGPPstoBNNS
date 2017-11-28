@@ -10,15 +10,17 @@ def kl_inference(log_gp_prior, N_weights, N_samples):
         mean, log_std = params[:N_weights], params[N_weights:]
         return mean, log_std
 
+    def gaussian_entropy(samples):
+        return np.log()
+
+
     def kl_objective(params, t):
         """
         Provides a stochastic estimate of the kl divergence
         kl= E_{p_BNN(f|phi)} [log p_BNN(f|phi) -log p_GP(f|theta)]
         mean, log_std                                           dim = [N_weights]
         samples                                                 dim = [N_samples, N_weights]
-        kl                                                      dim = [1]
-
-        """
+        kl                                                      dim = [1] """
 
         prior_mean, prior_log_std = unpack_params(params)
         samples = rs.randn(N_samples, N_weights) * np.exp(prior_log_std) + prior_mean

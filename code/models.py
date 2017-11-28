@@ -1,11 +1,12 @@
 import autograd.numpy as np
 import autograd.numpy.random as npr
-from autograd.numpy.linalg import solve, cholesky
-from kernels import covariance
+from autograd.numpy.linalg import solve, cholesky, det
+from autograd import grad
+rs = npr.RandomState(0)
 
 
-def morph_bnn(layer_sizes, nonlinearity=np.tanh,
-              noise_var=0.01, L2_reg=0.1):
+def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
+                n_data=1000, N_samples=20):
 
     shapes = list(zip(layer_sizes[:-1], layer_sizes[1:]))
     N_weights = sum((m+1)*n for m, n in shapes)
@@ -23,97 +24,164 @@ def morph_bnn(layer_sizes, nonlinearity=np.tanh,
             weights = weights[:, (m+1)*n:]
 
     def predictions(weights, inputs):
+        """ implements the forward pass of the bnn
+        weights | dim = [N_weight_samples, N_weights]
+        inputs  | dim = [N_data]
+        outputs | dim = [N_weight_samples, N_data,1] """
+
+        inputs = np.expand_dims(inputs, 0)
+        for W, b in unpack_layers(weights):
+            outputs = np.einsum('mnd,mdo->mno', inputs, W) + b
+            inputs = nonlinearity(outputs)
+        return outputs
+
+    def covariance(x, xp):
+        ell, sigma_f = 1.0, 1.0
+        diffs = (x[:, None] - xp[None, :]) / ell
+        cov = sigma_f * np.exp(-0.5 * np.sum(diffs ** 2, axis=2))
+        return cov
+
+    def log_gp_prior(f_bnn, x, t):
+        """ computes: the expectation value of the log of the gp prior :
+        E_{X~p(X)} [log p_gp(f)] where p_gp(f) = N(f|0,K) where f ~ p_BNN(f)
+        = -0.5 * E_{X~p(X)} [ (L^-1f)^T(L^-1f) ] + const; K = LL^T (cholesky decomposition)
+        (we ignore constants for now as we are not optimizing the covariance hyperparams)
+
+        bnn_weights                   |  dim = [N_weights_samples, N_weights]
+        K = covariance/Kernel matrix  |  dim = [N_data, N_data] ; dim L = dim K
+        f_bnn output of a bnn         |  dim = [N_data, N_weights_samples]
+        returns : E[log p_gp(f)]      |  dim = [N_function_samples] """
+
+        K = covariance(x, x)+1e-7*np.eye(len(x))        # shape [N_data, N_data]
+        L = cholesky(K)                                 # shape K = LL^T
+        a = solve(L, f_bnn)                             # shape = shape f_bnn (L^-1 f_bnn)
+        log_gp = -0.5*np.mean(a**2, axis=0)             # Compute E_{X~p(X)}
+        return log_gp
+
+    def entropy_estimate(f_bnn):
+        """ estimate of the entropy og p_bnn(f )
+        given by H[p_bnn(f)] = E_{p_bnn(f} [-log p_bnn(f)]
+        f_bnn shape [N_data, N_weights_samples]      """
+        n_data, n_samples = f_bnn.shape
+
+        entropy = -0.001
+
+        # sample diagonal covariance
+        # var_moment = np.var(f_bnn, axis=0)  # shape = [N_data]
+        # entropy = 0.008*np.sum(np.log(var_moment))
+
+        # sample covariance matrix using the scatter matrix
+        # f_bnn=f_bnn/np.max(f_bnn)
+        # C = np.eye(n_samples)-np.ones((n_samples, n_samples))/n_samples
+        # S = np.dot(np.dot(f_bnn, C), f_bnn.T)/n_samples
+        # print("shape", S.shape)
+        # entropy = 0.5*np.log(det(S))
+
+        return entropy
+
+    def kl_objective(params, t):
         """
-        implements the forward pass of the bnn
-        weights                                        dim = [N_weight_samples, N_weights]
-        inputs                                         dim = [N_data]
-        outputs                                        dim = [N_weight_samples, N_data,1]
-        """
+        Provides a stochastic estimate of the kl divergence
+        kl= E_{p_BNN(f|phi)} [log p_BNN(f|phi) -log p_GP(f|theta)]
+
+        mean, log_std  |  dim = [N_weights]
+        samples        |  dim = [N_samples, N_weights]
+        f_bnn          |  dim = [N_data, N_weights_samples]
+
+        kl             |  dim = [1] """
+
+        prior_mean, prior_log_std = unpack_params(params)
+        bnn_weights = rs.randn(N_samples, N_weights) * np.exp(prior_log_std) + prior_mean
+        x = np.random.uniform(low=-10, high=10, size=(n_data, 1))
+        f_bnn = predictions(bnn_weights, x)[:, :, 0].T  # shape [N_data, N_weights_samples]
+        kl = - entropy_estimate(f_bnn) - np.mean(log_gp_prior(f_bnn, x,  t))
+        return kl
+
+    grad_kl = grad(kl_objective)
+
+    return N_weights, predictions, unpack_params, kl_objective, grad_kl
+
+
+# BAYESIAN NEURAL NET
+
+
+def construct_bnn(layer_sizes, nonlinearity=np.tanh,
+                  noise_var=0.1, L2_reg=0.1,
+                  N_samples=20):
+
+    shapes = list(zip(layer_sizes[:-1], layer_sizes[1:]))
+    N_weights = sum((m+1)*n for m, n in shapes)
+
+    def init_bnn_params(N_weights, scale=-5):
+        """initial mean and log std of q(w|phi) """
+        mean = rs.randn(N_weights)
+        log_std = scale * np.ones(N_weights)
+        return np.concatenate([mean, log_std])
+
+    def unpack_params(params):
+        mean, log_std = params[:N_weights], params[N_weights:]
+        return mean, log_std
+
+    def unpack_layers(weights):
+        """ unpacks the weights into relevant tensor shapes """
+        num_weight_sets = len(weights)
+        for m, n in shapes:
+            yield weights[:, :m*n]     .reshape((num_weight_sets, m, n)),\
+                  weights[:, m*n:m*n+n].reshape((num_weight_sets, 1, n))
+            weights = weights[:, (m+1)*n:]
+
+    def predictions(weights, inputs):
+        """ implements the forward pass of the bnn
+        weights | dim = [N_weight_samples, N_weights]
+        inputs  | dim = [N_data]
+        outputs | dim = [N_weight_samples, N_data,1] """
 
         inputs = np.expand_dims(inputs, 0)
         params = list(unpack_layers(weights))
         for W, b in params:
             outputs = np.einsum('mnd,mdo->mno', inputs, W) + b
             inputs = nonlinearity(outputs)
-
         return outputs
 
-    def logpost_l2(weights, inputs, targets):
-        """
-        computes the unnormalized log posterior of the weights
-        using a standard normal prior p(w) = N(0,I)
-        log p(w|D) = log p(D|w)+ log p(w)
-        where D = {xi,yi}   i=1,...,N_data
+    def log_post(weights, inputs, targets, prior_param=None):
+        """ computes the unnormalized log posterior of the weights using
+        the learned prior p(w|phi*) or a standard normal prior p(w) = N(0,I)
+        log p(w|D) = log p(D|w)+ log p(w|phi) where D = {xi,yi}   i=1, ..., N_data
 
-        weights:                                        dim = [N_weight_samples, N_weights]
-        inputs: xi                                      dim = [N_data]
-        targets: yi in                                  dim = [N_data]
+        weights:                                    |  dim = [N_weight_samples, N_weights]
+        D = (inputs, targets) = (xi,yi)             |  dim = ([N_data], [N_data])
 
-        compute 1) log_prior = log p(w)                 dim = [N_weights_samples]
-                2) log_lik = log(D|w)                   dim = [N_weights_samples]
+        prior_param = learned params of the prior   |  dim = [2*N_weights]
+        unpacked into prior_mean and prior_log_std  |  dim = [N_weights]
 
-        log posterior = log p(D|w)+ log p(w)            dim = [N_weights_samples]
-        """
-        log_prior = -L2_reg * np.sum(weights**2, axis=1)
-        preds = predictions(weights, inputs)
-        log_lik = -np.sum((preds - targets)**2, axis=1)[:, 0] / noise_var
-        return log_prior + log_lik
+        log_prior = log q(w|phi)                    |  dim = [N_weights_samples]
+        log_lik = log(D|w)                          |  dim = [N_weights_samples] """
 
-    def log_gp_prior(bnn_weights, n_data):
-        """
-        computes: the expectation value of the log of the gp prior :
-        E_{X~p(X)} [log p_gp(f)] where p_gp(f) = N(f|0,K) where f ~ p_BNN(f)
-        we use the cholesky decomposition of K : L
-        -0.5*E_{X~p(X)} [(L^-1f)^T(L^-1f)] + constants
-        (we ignore constants for now as we are not optimizing the covariance hyperparams)
+        if prior_param is not None:
+            log_prior = -L2_reg * np.sum(weights ** 2, axis=1)
+        else:
+            prior_mean, prior_log_std = unpack_params(prior_param)
+            log_prior = -0.5*np.sum((weights-prior_mean)**2 / np.exp(prior_log_std), axis=1)
 
-        param:
-        inputs                                          dim = [N_data]
-        bnn_weights = weights of the BNN                dim = [N_weights_samples, N_weights]
-
-        K = the covariance matrix                       dim = [N_data, N_data]
-        f_bnn output of a bnn                           dim = [N_weights_samples, N_data]
-        L = Cholesky(K)                                 dim = dim K
-
-        returns : E[log p_gp(f)]                        dim = [N_function_samples]
-        """
-        x = np.random.uniform(size=(n_data, 1))
-        f_bnn = predictions(bnn_weights, x)[:, :, 0].T
-        K = covariance(x, x)+1e-7*np.eye(len(x))
-        L = cholesky(K)
-        a = solve(L, f_bnn).T
-        log_gp = -0.5*np.mean(a**2, axis=1)
-
-        # print("shapes | K^-1f {} | fbnn {} | K {} | log_gp_prior {} |".format(
-        #      a.shape, f_bnn.shape, K.shape, log_gp.shape))
-
-        return log_gp
-
-    def log_post(weights, inputs, targets, prior_param):
-        """
-        computes the (unnormalized) log posterior of the weights using the learned prior
-        log p(w|D) = log p(D|w)+ log p(w|phi)
-        where D = {xi,yi}   i=1,...,N_data
-
-        weights:                                        SHAPE = [N_weight_samples, N_weights]
-        inputs: xi                                      SHAPE = [N_data]
-        targets: yi in                                  SHAPE = [N_data]
-        prior_param = phi :
-        learned params of the prior                     SHAPE = [2*N_weights].
-        unpacked into prior_mean                        SHAPE = [N_weights]
-                  and prior_log_std                     SHAPE = [N_weights]
-
-        compute 1) log_prior = log q(w|phi)             SHAPE = [N_weights_samples]
-                2) log_lik = log(D|w)                   SHAPE = [N_weights_samples]
-
-        log posterior = log p(D|w)+ log q(w|phi)        SHAPE = [N_weights_samples]
-        """
-
-        prior_mean, prior_log_std = unpack_params(prior_param)
-        log_prior = -0.5*np.sum((weights-prior_mean)**2 / np.exp(prior_log_std), axis=1)
         preds = predictions(weights, inputs)
         log_lik = -np.sum((preds - targets)**2, axis=1)[:, 0] / noise_var
 
         return log_prior + log_lik
 
-    return N_weights, predictions, logpost_l2, log_gp_prior, log_post
+    def gaussian_entropy(log_std):
+        return 0.5 * N_weights * (1.0 + np.log(2*np.pi)) + np.sum(log_std)
+
+    def vlb_objective(params, log_prob, t):
+        """ Provides a stochastic estimate of the variational lower bound
+        ELBO = -E_q(w)[p(D|w)] - KL[q(w)|p(w)]
+
+        params                                                  dim = [2*N_weights]
+        mean, log_std                                           dim = [N_weights]
+        samples                                                 dim = [N_samples, N_weights]
+        lower bound                                             dim = [1] """
+        mean, log_std = unpack_params(params)
+        samples = rs.randn(N_samples, N_weights) * np.exp(log_std) + mean
+        lower_bound = gaussian_entropy(log_std) + np.mean(log_prob(samples, t))
+        return -lower_bound
+
+    return N_weights, init_bnn_params, predictions, log_post, unpack_params, vlb_objective

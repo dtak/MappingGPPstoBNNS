@@ -27,6 +27,7 @@ def kernel(x, xp, param, f=np.exp, norm='l2'):
     K = os * f(norm(x, xp)/ls)
     return K
 
+
 def covariance(x, xp, kernel_params=0.1 * rs.randn(2)):
     output_scale = np.exp(kernel_params[0])
     length_scales = np.exp(kernel_params[1:])

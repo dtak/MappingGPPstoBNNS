@@ -10,12 +10,13 @@ from util import build_toy_dataset
 from blackbox_svi import gan_inference
 from autograd.numpy.linalg import solve, cholesky
 import seaborn as sns
+
 def rbf(x): return np.exp(-x**2)
 def relu(x): return np.maximum(0, x)
 def sigmoid(x): return 0.5 * (np.tanh(x) + 1.0)
 
-def morph_gan(bnn_layer_sizes,
-              bnn_nonlinearity=rbf, nn_nonlinearity=relu):
+
+def morph_gan(bnn_layer_sizes, bnn_nonlinearity=rbf, nn_nonlinearity=relu):
 
     bnn_shapes = list(zip(bnn_layer_sizes[:-1], bnn_layer_sizes[1:]))
     n_bnn_weights = sum((m+1)*n for m, n in bnn_shapes)
@@ -70,7 +71,7 @@ def morph_gan(bnn_layer_sizes,
         return outputs
 
     def gan_log_prob(bnn_weights, d_params, n_data, n_samples):
-        x = np.random.normal(size=(n_data, 1))  # sample X ~ P(X)
+        x = np.random.normal(scale=8, size=(n_data, 1))  # sample X ~ P(X)
         bnn_samples = bnn_predict(bnn_weights, x)  # sample f ~ P_bnn(f)
         gp_samples = sample_gp_prior(x, n_samples)  # sample f ~ P_gp(f)
         logprobs_bnn = logsigmoid(nn_predict(d_params, bnn_samples))
@@ -86,6 +87,7 @@ def init_nn_params(scale, layer_sizes, rs=npr.RandomState(0)):
     return [(scale * rs.randn(m, n), scale * rs.randn(n))
             for m, n in zip(layer_sizes[:-1], layer_sizes[1:])]
 
+
 def init_bnn_params(num_weights, scale=-2):
     """packs together mean and log std of variational approx
        to posterior which is a diagonal gaussian """
@@ -97,13 +99,13 @@ def init_bnn_params(num_weights, scale=-2):
 if __name__ == '__main__':
     rs = npr.RandomState(0)
     data = "xsinx"
-    n_data = 200
-    samples = 15
+    n_data = 50
+    samples = 5
     save_plots = False
     plot_during = True
 
     gen_layer_sizes = [1, 20, 20, 1]
-    dsc_layer_sizes = [n_data, 50, 25, 1]
+    dsc_layer_sizes = [n_data, 20, 1]
 
     # Training parameters
     param_scale = 0.01
@@ -121,27 +123,31 @@ if __name__ == '__main__':
 
     # set up fig
     if plot_during:
-        fig = plt.figure(facecolor='white')
-        ax = fig.add_subplot(111, frameon=False)
+        f, ax = plt.subplots(3, sharex=True, frameon=False)
         plt.ion()
         plt.show(block=False)
 
     def callback(gen_params, dsc_params, iter, gen_gradient, dsc_gradient):
-        # Sample functions from prior f ~ p(f|phi) or p(f|varphi)
+        # Sample functions from priors f ~ p(f)
         n_samples = 3
         plot_inputs = np.linspace(-8, 8, num=100)
         mean, log_std = unpack_params(gen_params)
-        sample_weights = rs.randn(n_samples, n_bnn_weights) * np.exp(log_std) + mean
-        f_bnn = bnn_predict(sample_weights, plot_inputs[:, None]).T  # f ~ p_bnn (f)
-        f_gp = sample_gp(plot_inputs, n_samples).T                   # f ~ p_gp  (f)
+        bnn_gp_weights = rs.randn(n_samples, n_bnn_weights) * np.exp(log_std) + mean
+        bnn_weights = rs.randn(n_samples, n_bnn_weights)
 
-        # Plot functions.
+        f_bnn_gpp = bnn_predict(bnn_gp_weights, plot_inputs[:, None]).T     # f ~ p_bnn (f|phi)
+        f_gp      = sample_gp(plot_inputs, n_samples).T                     # f ~ p_gp  (f)
+        f_bnn     = bnn_predict(bnn_weights, plot_inputs[:, None]).T        # f ~ p_bnn (f)
+
+        # Plot samples of functions from the bnn and gp priors.
         if plot_during:
-            plt.cla()
+            for axes in ax: axes.cla()
+
             # ax.plot(x.ravel(), y.ravel(), 'ko')
-            ax.plot(plot_inputs, f_bnn, color='r')
-            ax.plot(plot_inputs, f_gp, color='g')
-            ax.set_ylim([-10, 10])
+            ax[0].plot(plot_inputs, f_gp, color='green')
+            ax[1].plot(plot_inputs, f_bnn_gpp, color='red')
+            ax[2].plot(plot_inputs, f_bnn, color='blue')
+
             plt.draw()
             plt.pause(1.0/40.0)
 
@@ -151,6 +157,8 @@ if __name__ == '__main__':
     # INITIALIZE THE PARAMETERS
     init_gen_params = init_bnn_params(n_bnn_weights, scale=-1.5)
     init_dsc_params = init_nn_params(param_scale, dsc_layer_sizes)
+
+    # OPTIMIZE
 
     optimized_params = adam_minimax(grad_gan, init_gen_params, init_dsc_params,
                                     step_size_max=step_size_max, step_size_min=step_size_min,
