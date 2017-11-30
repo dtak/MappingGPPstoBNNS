@@ -2,11 +2,14 @@ import autograd.numpy as np
 import autograd.numpy.random as npr
 from autograd.numpy.linalg import solve, cholesky, det
 from autograd import grad
+import kernels
 rs = npr.RandomState(0)
+
+covariance = kernels.kernel_per
 
 
 def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
-                n_data=1000, N_samples=20):
+                n_data=100, N_samples=20):
 
     shapes = list(zip(layer_sizes[:-1], layer_sizes[1:]))
     N_weights = sum((m+1)*n for m, n in shapes)
@@ -35,11 +38,31 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
             inputs = nonlinearity(outputs)
         return outputs
 
-    def covariance(x, xp):
-        ell, sigma_f = 1.0, 1.0
-        diffs = (x[:, None] - xp[None, :]) / ell
-        cov = sigma_f * np.exp(-0.5 * np.sum(diffs ** 2, axis=2))
-        return cov
+    def init_bnn_params(N_weights, scale=-5):
+        """initial mean and log std of q(w) ~ N(w|mean,std)"""
+        mean = rs.randn(N_weights)
+        log_std = scale * np.ones(N_weights)
+        return np.concatenate([mean, log_std])
+
+    def sample_gpp(x, n_samples):
+        """ Samples from the gp prior x = inputs with shape [N_data]
+        returns : samples from the gp prior [N_data, N_samples] """
+        x = np.ravel(x)
+        n_data = len(x)
+        K = covariance(x[:, None], x[:, None])
+        L = cholesky(K + 1e-7 * np.eye(n_data))
+        e = rs.randn(n_data, n_samples)
+        return np.dot(L, e)
+
+    def sample_bnn(x, n_samples, params=None):
+        """samples functions from a bnn"""
+        if params is not None:  # sample learned learned prior var params
+            mean, log_std = unpack_params(params)
+            bnn_weights = rs.randn(n_samples, N_weights) * np.exp(log_std) + mean
+        else:  # sample standard normal prior weights
+            bnn_weights = rs.randn(n_samples, N_weights)
+        return predictions(bnn_weights, x[:, None])[:, :, 0].T
+
 
     def log_gp_prior(f_bnn, x, t):
         """ computes: the expectation value of the log of the gp prior :
@@ -99,7 +122,9 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
 
     grad_kl = grad(kl_objective)
 
-    return N_weights, predictions, unpack_params, kl_objective, grad_kl
+    return N_weights, predictions, unpack_params, \
+           init_bnn_params, sample_bnn, sample_gpp, \
+           kl_objective, grad_kl
 
 
 # BAYESIAN NEURAL NET

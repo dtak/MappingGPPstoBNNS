@@ -4,11 +4,12 @@ import autograd.numpy.random as npr
 from autograd.numpy.linalg import solve, cholesky
 from autograd.misc.optimizers import adam, sgd
 from blackbox_svi import kl_inference, vlb_inference
-from util import covariance, build_toy_dataset
+from util import build_toy_dataset
 import plotting
 from plotting import plot_mean_std, plot_priors, plot_deciles, plot_samples
 from models import map_gpp_bnn, construct_bnn
 import os
+import kernels
 import seaborn as sns
 sns.set_style('white')
 rs = npr.RandomState(0)
@@ -19,7 +20,8 @@ if __name__ == '__main__':
     # define nonlinearity here
     rbf = lambda x: np.exp(-x**2)
     relu = lambda x: np.maximum(x, 0.)
-    sigmoid =lambda x: 0.5*(np.tanh(x)**2-1)
+    sigmoid = lambda x: 0.5*(np.tanh(x)**2-1)
+    linear = lambda x: x
 
     exp_num = 26
     data = 'xsinx'  # or expx or cosx
@@ -31,36 +33,11 @@ if __name__ == '__main__':
     save_plot = False
     plot_during = True
 
-    num_weights, bnn_predict, unpack_params,\
-    kl, grad_kl = map_gpp_bnn(layer_sizes=[1, 30, 1], nonlinearity=np.tanh)
+    num_weights, bnn_predict, unpack_params, \
+    init_bnn_params, sample_bnn, sample_gpp, \
+    kl, grad_kl = map_gpp_bnn(layer_sizes=[1, 30, 1], nonlinearity=np.sin)
 
     inputs, targets = build_toy_dataset(data, n_data=N_data)
-
-    def init_bnn_params(N_weights, scale=-5):
-        """initial mean and log std of q(w) ~ N(w|mean,std)"""
-        mean = rs.randn(N_weights)
-        log_std = scale * np.ones(N_weights)
-        return np.concatenate([mean, log_std])
-
-    def sample_gp_prior(x, n_samples):
-        """ Samples from the gp prior x = inputs with shape [N_data]
-        returns : samples from the gp prior [N_data, N_samples] """
-        x = np.ravel(x)
-        n_data = len(x)
-        K = covariance(x[:, None], x[:, None])
-        L = cholesky(K + 1e-7 * np.eye(n_data))
-        e = rs.randn(n_data, n_samples)
-        return np.dot(L, e)
-
-    def sample_bnn(x, n_samples, params=None):
-        """samples functions from a bnn"""
-        if params is not None:  # sample learned learned prior var params
-            mean, log_std = unpack_params(params)
-            bnn_weights = rs.randn(n_samples, num_weights) * np.exp(log_std) + mean
-        else:  # sample standard normal prior weights
-            bnn_weights = rs.randn(n_samples, num_weights)
-        return bnn_predict(bnn_weights, x[:, None])[:, :, 0].T
-
 
     if plot_during:
         f, ax = plt.subplots(3, sharex=True)
@@ -74,7 +51,7 @@ if __name__ == '__main__':
 
         f_bnn_gpp = sample_bnn(plot_inputs, n_samples, prior_params)    # f ~ p_bnn (f|phi)
         f_bnn     = sample_bnn(plot_inputs, n_samples)                  # f ~ p_bnn (f)
-        f_gp      = sample_gp_prior(plot_inputs, n_samples)             # f ~ p_gp  (f)
+        f_gp      = sample_gpp(plot_inputs, n_samples)                  # f ~ p_gp  (f)
 
         # Plot samples of functions from the bnn and gp priors.
         if plot_during:

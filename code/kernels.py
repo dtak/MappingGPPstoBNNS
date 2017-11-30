@@ -4,16 +4,19 @@ rs = npr.RandomState(0)
 
 # will add a bunch of kernels and stuff
 
+
 def L2_norm(x, xp):
     d = x[:, None] - xp[None, :]
     matrix_l2_norm = np.sum(d**2, axis=2)
     return matrix_l2_norm
+
 
 def L1_norm(x, xp):
     d = x[:, None] - xp[None, :]
     d **= 2
     matrix_l1_norm = np.sum(d**0.5, axis=2)
     return matrix_l1_norm
+
 
 def kernel(x, xp, param, f=np.exp, norm='l2'):
     """
@@ -34,3 +37,38 @@ def covariance(x, xp, kernel_params=0.1 * rs.randn(2)):
     diffs = (x[:, None] - xp[None, :]) / length_scales
     cov = output_scale * np.exp(-0.5 * np.sum(diffs ** 2, axis=2))
     return cov
+
+
+def kernel_rbf(x, xp):
+    s, l = 1.0, 1.0
+    d = L2_norm(x, xp)
+    k = s*np.exp(-0.5 * d/l**2)
+    return k
+
+
+def kernel_per(x, xp):
+    s, p, l = 1.0, 3.0, 3.0
+    d = L1_norm(x, xp)/p
+    k = s*np.exp(-2 * (np.sin(np.pi*d)/l)**2)
+    return k
+
+
+def kernel_rq(x, xp, alpha=2):
+    d = L2_norm(x, xp)
+    k = (1 + 0.5 * d)**alpha
+    return k
+
+
+def kernel_loc_per(x, xp):
+    return kernel_per(x, xp)*kernel_rbf(x, xp)
+
+
+def kernel_lin(x, xp):
+    c, s, h = 0, 1.0, 0
+    k = s*(x[:, None]-c)*(xp[None, :]-c)
+    return k+h
+
+
+def kernel_lin_per(x, xp):
+    return kernel_lin(x, xp)*kernel_per(x, xp)
+
