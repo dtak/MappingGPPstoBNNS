@@ -7,7 +7,7 @@ from autograd import grad
 from optimizers import adam_minimax as adam
 import kernels
 
-# choose kernel here ; replace rbf with
+# choose kernel here ; replace rbf with whatever
 covariance = kernels.kernel_rbf
 rs = npr.RandomState(0)
 
@@ -73,12 +73,12 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
     def log_prob(weights, inputs, targets):
         """ computes log p(y,w) = log p(y|w)+ log p(w)
             with a p(w) = N(w|0,I)
-        weights:                                    |  dim = [N_weight_samples, N_weights]
-        preds = f                                   |  dim = [N_weight_samples, N_data, 1]
-        targets = y                                 |  dim = [N_data]
+        weights:                  |  dim = [N_weight_samples, N_weights]
+        preds = f                 |  dim = [N_weight_samples, N_data, 1]
+        targets = y               |  dim = [N_data]
 
-        log_prior = log p(w)                        |  dim = [N_weights_samples]
-        log_lik = log(y|w)                          |  dim = [N_weights_samples] """
+        log_prior = log p(w)      |  dim = [N_weights_samples]
+        log_lik = log(y|w)        |  dim = [N_weights_samples] """
 
 
         log_prior = -L2_reg * np.sum(weights ** 2, axis=1)
@@ -104,15 +104,12 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         return gaussian_entropy(log_std) + np.mean(log_prob(ws, x, y))  # ELBO
 
     def entropy(thetas, ys, x):
-        """ estimate of the entropy of p(y) given by
-        H[p_(y)] = E_{p(y} [log p(y)] = sum_y log p(y)
-        where each log p(y) = max E_r(w) [ log p(y,w)-log r(w)]
-        ys has shape [N_samples, N_data] """
+        """ creates an array of log p(y) for each y in ys
+        which are estimated by using the ELBO
+        log p(y) => E_r(w) [ log p(y,w)-log r(w)]
+        ys has shape [y_samples, N_data] """
 
-        # lambda_means, lambda_log_stds = unpack_lambda_params(params_lambda)
-        # w_lambda = rs.randn(N_samples, N_weights, 1) * np.exp(lambda_log_stds) + lambda_means
-
-        #  get E_r(w)[p(y,w) - r(w)] for all w and y combs
+        #  get E_r(w)[p(y,w) - r(w)] for each w, y
         elbos = np.array([elbo(theta, x, y) for theta, y in zip(thetas, ys)])
 
         return elbos
@@ -122,14 +119,14 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         Provides a stochastic estimate of the kl divergence
         kl[p(y)|p_GP(y)] = E_p(y) [log p(y) -log p_gp(y)]
                          = -H[ p(y) ] -E_p(y) [log p_gp(y)]
-
+        using :
         params_phi        dim = [2*N_weights]
-        params_theta      dim = [N_samples, 2*N_weights]
+        params_theta      list of [2*N_weights] : the var params of each r(w)
 
         phi_mean, phi_log_std  |  dim = [N_weights]
 
         w_phi        |  dim = [N_samples, N_weights]
-        y_bnn          |  dim = [N_data, N_weights_samples]
+        y_bnn        |  dim = [N_data, N_weights_samples]
 
         kl             |  dim = [1] """
 
@@ -141,9 +138,9 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         y_bnn = f_bnn + 3*noise_var*rs.randn(n_data, N_samples)  # y = f + e ; y ~ p(y)
 
         # use monte carlo to approximate H[p(y)] = E_p(y)[ log p(y)] and E_p(y) [log p_gp(y)]
-        kl_div = np.mean(entropy(params_theta, y_bnn.T, x)) + np.mean(log_gp_prior(y_bnn, x))
+        kl_div = np.mean(entropy(params_theta, y_bnn.T, x)) - np.mean(log_gp_prior(y_bnn, x))
 
-        return -kl_div  # the KL
+        return kl_div  # the KL
 
     grad_kl = grad(kl_objective, argnum=(0, 1))
 
@@ -167,8 +164,8 @@ if __name__ == '__main__':
     plot_during = True
 
     num_weights, bnn_predict, sample_gpp, unpack_params, \
-    kl, grad_kl = map_gpp_bnn(layer_sizes=[1, 30, 1], nonlinearity=rbf,
-                              n_data=200, N_samples=10)
+    kl, grad_kl = map_gpp_bnn(layer_sizes=[1, 20, 20, 1], nonlinearity=rbf,
+                              n_data=200, N_samples=15)
 
     def init_bnn_params(N_weights, scale=-5):
         """initial mean and log std of q(w|phi) """
@@ -178,7 +175,7 @@ if __name__ == '__main__':
 
 
     def init_thetas_params(N_weights, N_samples, scale=-5):
-        """initial mean and log std of q(w|phi) """
+        """list of initial mean and log std of r(w|theta) for each y"""
         mean = rs.randn(N_weights)
         log_std = scale * np.ones(N_weights)
         return [np.concatenate([mean, log_std])]*N_samples
@@ -186,7 +183,7 @@ if __name__ == '__main__':
     def sample_bnn(x, n_samples, params=None):
         """samples functions from a bnn"""
         n_data = x.shape[0]
-        if params is not None:  # sample learned prior var params
+        if params is not None:  # sample using reparameterization trick
             mean, log_std = unpack_params(params)
             bnn_weights = rs.randn(n_samples, num_weights) * np.exp(log_std) + mean
         else:  # sample standard normal prior weights
@@ -232,11 +229,11 @@ if __name__ == '__main__':
     # the functions drawn from the optimized bnn prior are heavily
     # dependent on which initialization scheme used here
 
-    init_phis = init_bnn_params(num_weights, scale=-2.5)
+    init_phis = init_bnn_params(num_weights, scale=-0.5)
     init_thetas = init_thetas_params(num_weights, samples, scale=-5)
 
     # ---------------------- MINIMIZE THE KL --------------------------
 
     prior_params = adam(grad_kl, init_phis, init_thetas,
-                        step_size_max=0.1, step_size_min=0.01,
+                        step_size_max=0.01, step_size_min=0.1,
                         num_iters=iters_1, callback=callback_kl)
