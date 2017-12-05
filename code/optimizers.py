@@ -5,7 +5,7 @@ from autograd.misc import flatten
 
 
 def adam_minimax(grad_both, init_params_max, init_params_min, callback=None,
-                 num_iters=100, max_iters=20,
+                 num_iters=100, max_iters=1,
                  step_size_max=0.001, step_size_min=0.001, b1=0.9, b2=0.999, eps=10**-8):
     """Adam modified to do minimiax optimization, for instance to help with
     training generative adversarial networks."""

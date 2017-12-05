@@ -4,13 +4,12 @@ import matplotlib.pyplot as plt
 
 import autograd.numpy as np
 import autograd.numpy.random as npr
-
+from autograd import grad
 from blackbox_svi import vlb_inference
 from autograd.misc.optimizers import adam
 import plotting
 from util import build_toy_dataset
-from models import morph_bnn
-from models import morph_bnn
+from models import construct_bnn
 import os
 import seaborn as sns
 sns.set_style('white')
@@ -22,66 +21,69 @@ if __name__ == '__main__':
     rbf = lambda x: np.exp(-x**2)
     relu = lambda x: np.maximum(x, 0.)
 
-    num_weights, predictions, logprob, _, _ = morph_bnn(layer_sizes=[1, 20, 20, 1],
-                                                        nonlinearity=rbf)
 
+    # Set up
     exp_num = 1
-    data = 'cosx'  # or expx or cosx
-    N_data = 70
     samples = 20
-    iters = 100
-    save_plot = True
-    plot_during_training = False
+    arch = [1, 20, 20, 1]
 
-    inputs, targets = build_toy_dataset(data, N_data)
-    log_posterior = lambda weights, t: logprob(weights, inputs, targets)
-    objective, gradient, unpack_params = vlb_inference(log_posterior, num_weights, samples)
 
-    if plot_during_training:
+    data = 'xsinx'  # or expx or cosx
+    iters_2 = 50
+    N_data = 70
+    inputs, targets = build_toy_dataset(data, n_data=N_data)
+
+    save_plot =True
+    plot_during_ = True
+    save_dir = os.path.join(os.getcwd(), 'plots', 'bnn', "exp-" + str(exp_num) + data)
+
+    # construct the BNN
+    N_weights, init_bnn_params, predictions, sample_bnn, \
+    log_post, unpack_params, vlb_objective = construct_bnn(layer_sizes=arch, nonlinearity=rbf)
+
+    log_posterior = lambda weights, t: log_post(weights, inputs, targets)
+    vlb = lambda param, t: vlb_objective(param, log_posterior, t)
+
+    # set up fig
+    if plot_during_:
         fig = plt.figure(facecolor='white')
-        ax = fig.add_subplot(111, frameon=False)
+        ax = fig.add_subplot(111)
         plt.ion()
         plt.show(block=False)
 
 
-    def callback(params, t, g):
-        # Sample functions from posterior.
-        mean, log_std = unpack_params(params)
-        sample_weights = rs.randn(5, num_weights) * np.exp(log_std) + mean
+    def callback(params, t, g, objective):
+        # Sample functions from posterior f ~ p(f|phi) or p(f|varphi)
+        N_samples = 5
         plot_inputs = np.linspace(-8, 8, num=400)
-        outputs = predictions(sample_weights, np.expand_dims(plot_inputs, 1))
-        p = outputs[:, :, 0].T
+        f_bnn = sample_bnn(plot_inputs, N_samples, params)
 
         # Plot data and functions.
-        if plot_during_training:
+        if plot_during_:
             plt.cla()
             ax.plot(inputs.ravel(), targets.ravel(), 'k.')
-            ax.plot(plot_inputs, p, color='b')
-            ax.set_ylim([-2, 3])
+            ax.plot(plot_inputs, f_bnn, color='r')
+            ax.set_title("fitting to toy data")
+            ax.set_ylim([-5, 5])
             plt.draw()
             plt.pause(1.0 / 60.0)
 
-        print("Iteration {} | objective {}".format(t, objective(params, t)))
+        if t>25:
+            D = (inputs.ravel(), targets.ravel())
+            plotting.plot_deciles(plot_inputs, f_bnn, D, save_dir+"iter {}".format(t), plot="bnn")
 
-    # Initialize variational parameters
-    rs = npr.RandomState(0)
-    init_mean = rs.randn(num_weights)
-    init_log_std = -5 * np.ones(num_weights)
-    init_var_params = np.concatenate([init_mean, init_log_std])
+        print("Iteration {} | vlb {}".format(t, -objective(params, t)))
 
-    var_params = adam(gradient, init_var_params,
-                      step_size=0.1, num_iters=iters, callback=callback)
 
-    if save_plot:
-        N_data = 400
-        N_samples = 5
-        D = (inputs.ravel(), targets.ravel())
-        x_plot = np.linspace(-8, 8, num=N_data)
-        save_title = "exp-" + str(exp_num)+data
-        save_dir = os.path.join(os.getcwd(), 'plots', 'bnn', save_title)
 
-        # predictions from posterior of bnn
-        mean, log_std = unpack_params(var_params)
-        sample_weights = rs.randn(N_samples, num_weights) * np.exp(log_std) + mean
-        p = predictions(sample_weights, x_plot[:, None])[:, :, 0].T
-        plotting.plot_deciles(x_plot, p, D, save_dir, plot="bnn")
+
+    callback_vlb = lambda params, t, g: callback(params, t, g, vlb)
+
+    init_var_params = init_bnn_params(N_weights)
+
+    var_params = adam(grad(vlb), init_var_params,
+                      step_size=0.1, num_iters=iters_2, callback=callback_vlb)
+
+
+
+

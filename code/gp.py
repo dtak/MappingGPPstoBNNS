@@ -8,6 +8,7 @@ from autograd.misc.optimizers import  sgd, adam
 import seaborn as sns
 import os
 import plotting
+from kernels import kernel_dict as kernel
 from util import build_toy_dataset
 sns.set_style("white")
 
@@ -66,11 +67,11 @@ def rbf_covariance(kernel_params, x, xp):
 if __name__ == '__main__':
 
     D = 1
-    exp_num = 1
+    exp_num = 2
     n_data = 70
-    iters = 10
-    data = "cosx"
-    samples = 10
+    iters = 5
+    data = "expx"
+    samples = 5
     save_plots = True
     plot_during = False
     rs = npr.RandomState(0)
@@ -106,8 +107,8 @@ if __name__ == '__main__':
                             color=sns.xkcd_rgb["sky blue"])
 
             # Show sampled functions from posterior.
-            sampled_funcs = mvnorm(pred_mean, pred_cov, size=5)  # shape = [samples, N_data]
-            ax.plot(x_plot, sampled_funcs.T)
+            sf = mvnorm(pred_mean, pred_cov, size=5)  # shape = [samples, N_data]
+            ax.plot(x_plot, sf.T)
 
             ax.plot(X, y, 'k.')
             ax.set_ylim([-2, 3])
@@ -115,6 +116,11 @@ if __name__ == '__main__':
             ax.set_yticks([])
             plt.draw()
             plt.pause(1.0/60.0)
+            if t == 1:
+                D = X, y[:, None]
+                p = sample_f(params, X, y, x_plot, samples)
+                plotting.plot_deciles(x_plot.ravel(), p, D, save_dir, plot="gp")
+
 
     # Initialize covariance parameters
     rs = npr.RandomState(0)
@@ -128,4 +134,10 @@ if __name__ == '__main__':
         p = sample_f(cov_params, X, y, x_plot, samples)
         print(p.shape)
         plotting.plot_deciles(x_plot.ravel(), p, D, save_dir, plot="gp")
+
+
+
+
+
+
 

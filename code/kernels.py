@@ -47,28 +47,37 @@ def kernel_rbf(x, xp):
 
 
 def kernel_per(x, xp):
-    s, p, l = 1.0, 3.0, 3.0
+    s, p, l = 1.0, 3.0, 1.0
     d = L1_norm(x, xp)/p
     k = s*np.exp(-2 * (np.sin(np.pi*d)/l)**2)
     return k
 
 
-def kernel_rq(x, xp, alpha=2):
+def kernel_rq(x, xp, alpha=3):
     d = L2_norm(x, xp)
-    k = (1 + 0.5 * d)**alpha
+    k = 1/(1 + 0.5 * d/alpha)**alpha
     return k
 
 
-def kernel_loc_per(x, xp):
+def kernel_per_rbf(x, xp):
     return kernel_per(x, xp)*kernel_rbf(x, xp)
 
 
 def kernel_lin(x, xp):
     c, s, h = 0, 1.0, 0
+    x=x.ravel(); xp=xp.ravel()
     k = s*(x[:, None]-c)*(xp[None, :]-c)
-    return k+h
+    print(k.shape)
+    return k
 
 
 def kernel_lin_per(x, xp):
     return kernel_lin(x, xp)*kernel_per(x, xp)
 
+kernel_dict = {"rbf": kernel_rbf,
+               "per": kernel_per,
+               "rq": kernel_rq,
+               "lin": kernel_lin,
+               "per-rbf": kernel_per_rbf,
+               "lin-per": kernel_lin_per,
+               }

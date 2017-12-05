@@ -2,14 +2,16 @@ import autograd.numpy as np
 import autograd.numpy.random as npr
 from autograd.numpy.linalg import solve, cholesky, det
 from autograd import grad
-import kernels
+from kernels import kernel_dict
 rs = npr.RandomState(0)
 
-covariance = kernels.kernel_per
+
 
 
 def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
-                n_data=100, N_samples=20):
+                n_data=100, N_samples=20, kernel="rbf"):
+
+    covariance = kernel_dict[kernel]
 
     shapes = list(zip(layer_sizes[:-1], layer_sizes[1:]))
     N_weights = sum((m+1)*n for m, n in shapes)
@@ -49,8 +51,9 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         returns : samples from the gp prior [N_data, N_samples] """
         x = np.ravel(x)
         n_data = len(x)
-        K = covariance(x[:, None], x[:, None])
-        L = cholesky(K + 1e-7 * np.eye(n_data))
+        s =  1e-7 * np.eye(n_data)
+        K = covariance(x[:, None], x[:, None])+s
+        L = cholesky(K)
         e = rs.randn(n_data, n_samples)
         return np.dot(L, e)
 
@@ -75,8 +78,9 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         f_bnn output of a bnn         |  dim = [N_data, N_weights_samples]
         returns : E[log p_gp(f)]      |  dim = [N_function_samples] """
 
-        K = covariance(x, x)+1e-7*np.eye(len(x))        # shape [N_data, N_data]
-        L = cholesky(K)                                 # shape K = LL^T
+        s= 1e-6*np.eye(len(x))
+        K = covariance(x, x) +s                     # shape [N_data, N_data]
+        L = cholesky(K)+s                                 # shape K = LL^T
         a = solve(L, f_bnn)                             # shape = shape f_bnn (L^-1 f_bnn)
         log_gp = -0.5*np.mean(a**2, axis=0)             # Compute E_{X~p(X)}
         return log_gp
@@ -168,6 +172,15 @@ def construct_bnn(layer_sizes, nonlinearity=np.tanh,
             inputs = nonlinearity(outputs)
         return outputs
 
+    def sample_bnn(x, n_samples, params=None):
+        """samples functions from a bnn"""
+        if params is not None:  # sample learned learned prior var params
+            mean, log_std = unpack_params(params)
+            bnn_weights = rs.randn(n_samples, N_weights) * np.exp(log_std) + mean
+        else:  # sample standard normal prior weights
+            bnn_weights = rs.randn(n_samples, N_weights)
+        return predictions(bnn_weights, x[:, None])[:, :, 0].T
+
     def log_post(weights, inputs, targets, prior_param=None):
         """ computes the unnormalized log posterior of the weights using
         the learned prior p(w|phi*) or a standard normal prior p(w) = N(0,I)
@@ -182,7 +195,7 @@ def construct_bnn(layer_sizes, nonlinearity=np.tanh,
         log_prior = log q(w|phi)                    |  dim = [N_weights_samples]
         log_lik = log(D|w)                          |  dim = [N_weights_samples] """
 
-        if prior_param is not None:
+        if prior_param is None:
             log_prior = -L2_reg * np.sum(weights ** 2, axis=1)
         else:
             prior_mean, prior_log_std = unpack_params(prior_param)
@@ -209,4 +222,4 @@ def construct_bnn(layer_sizes, nonlinearity=np.tanh,
         lower_bound = gaussian_entropy(log_std) + np.mean(log_prob(samples, t))
         return -lower_bound
 
-    return N_weights, init_bnn_params, predictions, log_post, unpack_params, vlb_objective
+    return N_weights, init_bnn_params, predictions,sample_bnn, log_post, unpack_params, vlb_objective

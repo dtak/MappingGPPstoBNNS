@@ -8,7 +8,7 @@ from optimizers import adam_minimax as adam
 import kernels
 
 # choose kernel here ; replace rbf with whatever
-covariance = kernels.kernel_rbf
+covariance = kernels.kernel_per
 rs = npr.RandomState(0)
 
 
@@ -67,12 +67,12 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         K = covariance(x, x)+noise_var*np.eye(len(x))   # shape [N_data, N_data]
         L = cholesky(K)                                 # K = LL^T ; shape L = shape K
         a = solve(L, y_bnn)                             # a = L^-1 y_bnn ; shape L^-1 y_bnn =
-        log_gp = -0.5*np.mean(a**2, axis=0)             # Compute E [|a|^2]
+        log_gp = -0.5*np.mean(a**2, axis=0)             # Compute E [a^2]
         return log_gp
 
     def log_prob(weights, inputs, targets):
-        """ computes log p(y,w) = log p(y|w)+ log p(w)
-            with a p(w) = N(w|0,I)
+        """ computes log p(y,w) = log p(y|w)+ log p(w) with p(w) = N(w|0,I)
+
         weights:                  |  dim = [N_weight_samples, N_weights]
         preds = f                 |  dim = [N_weight_samples, N_data, 1]
         targets = y               |  dim = [N_data]
@@ -96,14 +96,14 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
 
         params          |   dim = [2*N_weights]
         mean, log_std   |   dim = [N_weights]
-        samples         |   dim = [N_samples, N_weights]
+        ws              |   dim = [N_samples, N_weights]
         returns : ELBO  |   dim = [1] """
 
         mean, log_std = unpack_params(var_param)
         ws = rs.randn(N_samples, N_weights) * np.exp(log_std) + mean  # sample weights from r(w)
         return gaussian_entropy(log_std) + np.mean(log_prob(ws, x, y))  # ELBO
 
-    def entropy(thetas, ys, x):
+    def log_pys(thetas, ys, x):
         """ creates an array of log p(y) for each y in ys
         which are estimated by using the ELBO
         log p(y) => E_r(w) [ log p(y,w)-log r(w)]
@@ -121,7 +121,7 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
                          = -H[ p(y) ] -E_p(y) [log p_gp(y)]
         using :
         params_phi        dim = [2*N_weights]
-        params_theta      list of [2*N_weights] : the var params of each r(w)
+        params_theta      list of [2*N_weights] : the var params of each r(w|theta)
 
         phi_mean, phi_log_std  |  dim = [N_weights]
 
@@ -137,8 +137,13 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         f_bnn = predictions(w_phi, x)[:, :, 0].T  # shape [N_data, N_weights_samples] f ~ p(f)
         y_bnn = f_bnn + 3*noise_var*rs.randn(n_data, N_samples)  # y = f + e ; y ~ p(y)
 
-        # use monte carlo to approximate H[p(y)] = E_p(y)[ log p(y)] and E_p(y) [log p_gp(y)]
-        kl_div = np.mean(entropy(params_theta, y_bnn.T, x)) - np.mean(log_gp_prior(y_bnn, x))
+        # use monte carlo to approx H[p(y)] = E_p(y)[ log p(y)]
+        entropy = np.mean(log_pys(params_theta, y_bnn.T, x))
+
+        # use monte carlo to approx E_p(y) [log p_gp(y)]
+        expected_log_gpp = np.mean(log_gp_prior(y_bnn, x))
+
+        kl_div = entropy - expected_log_gpp
 
         return kl_div  # the KL
 
@@ -165,7 +170,7 @@ if __name__ == '__main__':
 
     num_weights, bnn_predict, sample_gpp, unpack_params, \
     kl, grad_kl = map_gpp_bnn(layer_sizes=[1, 20, 20, 1], nonlinearity=rbf,
-                              n_data=200, N_samples=15)
+                              n_data=1000, N_samples=5)
 
     def init_bnn_params(N_weights, scale=-5):
         """initial mean and log std of q(w|phi) """
@@ -203,7 +208,7 @@ if __name__ == '__main__':
         n_samples = 3
         plot_inputs = np.linspace(-8, 8, num=100)
 
-        f_bnn_gpp = sample_bnn(plot_inputs, n_samples, phi)    # f ~ p_bnn (f|phi)
+        f_bnn_gpp = sample_bnn(plot_inputs, n_samples, phi)             # f ~ p_bnn (f|phi)
         f_bnn     = sample_bnn(plot_inputs, n_samples)                  # f ~ p_bnn (f)
         f_gp      = sample_gpp(plot_inputs, n_samples)                  # f ~ p_gp  (f)
 
@@ -235,5 +240,5 @@ if __name__ == '__main__':
     # ---------------------- MINIMIZE THE KL --------------------------
 
     prior_params = adam(grad_kl, init_phis, init_thetas,
-                        step_size_max=0.01, step_size_min=0.1,
+                        step_size_max=0.001, step_size_min=0.1,
                         num_iters=iters_1, callback=callback_kl)

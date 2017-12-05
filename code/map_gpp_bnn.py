@@ -1,17 +1,14 @@
 import matplotlib.pyplot as plt
 import autograd.numpy as np
 import autograd.numpy.random as npr
+from autograd import grad
 from autograd.numpy.linalg import solve, cholesky
 from autograd.misc.optimizers import adam, sgd
 from blackbox_svi import kl_inference, vlb_inference
-from util import build_toy_dataset
+from util import build_toy_dataset, make_title
 import plotting
-from plotting import plot_mean_std, plot_priors, plot_deciles, plot_samples
 from models import map_gpp_bnn, construct_bnn
 import os
-import kernels
-import seaborn as sns
-sns.set_style('white')
 rs = npr.RandomState(0)
 
 if __name__ == '__main__':
@@ -22,22 +19,36 @@ if __name__ == '__main__':
     relu = lambda x: np.maximum(x, 0.)
     sigmoid = lambda x: 0.5*(np.tanh(x)**2-1)
     linear = lambda x: x
+    softp = lambda x: np.log(1+np.exp(x))
 
-    exp_num = 26
-    data = 'xsinx'  # or expx or cosx
-    N_data = 70
+    exp_num = 8
+    x_num = 400
     samples = 20
-    iters_1 = 500
-    iters_2 = 100
+    arch = [1, 20, 20, 1]
+    act = "rbf"
+    kern = "rbf"
 
-    save_plot = False
+    iters_1 = 40
+    scale = -0.5
+    step = 0.1
+
+    save_plot = True
+    save_during = False
     plot_during = True
+
+    save_title = make_title(exp_num, x_num, samples, kern,
+                            arch, act, iters_1, scale, step)
+
+    save_dir = os.path.join(os.getcwd(), 'plots', 'exp', save_title)
+
+    if save_during:
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
 
     num_weights, bnn_predict, unpack_params, \
     init_bnn_params, sample_bnn, sample_gpp, \
-    kl, grad_kl = map_gpp_bnn(layer_sizes=[1, 30, 1], nonlinearity=np.sin)
-
-    inputs, targets = build_toy_dataset(data, n_data=N_data)
+    kl, grad_kl = map_gpp_bnn(layer_sizes=arch, nonlinearity=rbf,
+                              n_data=x_num, N_samples=samples, kernel=kern)
 
     if plot_during:
         f, ax = plt.subplots(3, sharex=True)
@@ -47,7 +58,7 @@ if __name__ == '__main__':
     def callback_kl(prior_params, iter, g):
         # Sample functions from priors f ~ p(f)
         n_samples = 3
-        plot_inputs = np.linspace(-8, 8, num=100)
+        plot_inputs = np.linspace(-8, 8, num=500)
 
         f_bnn_gpp = sample_bnn(plot_inputs, n_samples, prior_params)    # f ~ p_bnn (f|phi)
         f_bnn     = sample_bnn(plot_inputs, n_samples)                  # f ~ p_bnn (f)
@@ -67,33 +78,62 @@ if __name__ == '__main__':
             plt.draw()
             plt.pause(1.0/40.0)
 
-        print("Iteration {} KL {} ".format(iter, kl(prior_params, iter)))
+        fs = (f_gp, f_bnn, f_bnn_gpp)
+        kl_val = kl(prior_params, iter)
+
+        if save_during:
+            title = " iter {} kl {:5}".format(iter, kl_val)
+            plotting.plot_priors(plot_inputs, fs, os.path.join(save_dir, title))
+
+        print("Iteration {} KL {} ".format(iter, kl_val))
 
     # ----------------------------------------------------------------
-
     # Initialize the variational prior params (phi) HERE for q(w|phi)
-    # the functions drawn from the optimized bnn prior are heavily
-    # dependent on which initialization scheme used here
 
-    init_var_params = init_bnn_params(num_weights, scale=-0.5)
-
+    init_var_params = init_bnn_params(num_weights, scale=scale)
 
     # ---------------------- MINIMIZE THE KL --------------------------
 
-
     prior_params = adam(grad_kl, init_var_params,
-                        step_size=0.15, num_iters=iters_1, callback=callback_kl)
+                        step_size=step, num_iters=iters_1, callback=callback_kl)
 
 
     # --------------------- MINIMIZE THE VLB -----------------------------------
 
+    # Set up
+    data = 'xsinx'  # or expx or cosx
+    iters_2 = 100
+    N_data = 70
+    inputs, targets = build_toy_dataset(data, n_data=N_data)
 
-    min_vlb = False
+    min_vlb = True
+
 
     if min_vlb:
+        plot_during_ = True
+
+        # construct the BNN
+        N_weights, init_bnn_params, predictions, sample_bnn, \
+        log_post, unpack_params, vlb_objective = construct_bnn(layer_sizes=arch, nonlinearity=rbf)
+
+        log_posterior = lambda weights, t: log_post(weights, inputs, targets, prior_params)
+        vlb = lambda param, t: vlb_objective(param, log_posterior, t)
+
+
+        def save(params, t):
+            D = (inputs.ravel(), targets.ravel())
+            x_plot = np.linspace(-8, 8, num=400)
+            save_title = "exp-" + str(exp_num) + "iter " + str(t)
+
+            # predictions from posterior of bnn
+            p = sample_bnn(x_plot, 5, params)
+
+            save_dir = os.path.join(os.getcwd(), 'plots', 'gpp-bnn', save_title + data)
+            plotting.plot_deciles(x_plot, p, D, save_dir, plot="gpp")
+
 
         # set up fig
-        if plot_during:
+        if plot_during_:
             fig = plt.figure(facecolor='white')
             ax = fig.add_subplot(111)
             plt.ion()
@@ -107,7 +147,7 @@ if __name__ == '__main__':
             f_bnn = sample_bnn(plot_inputs, N_samples, params)
 
             # Plot data and functions.
-            if plot_during:
+            if plot_during_:
                 plt.cla()
                 ax.plot(inputs.ravel(), targets.ravel(), 'k.')
                 ax.plot(plot_inputs, f_bnn, color='r')
@@ -116,28 +156,22 @@ if __name__ == '__main__':
                 plt.draw()
                 plt.pause(1.0 / 60.0)
 
+            if t>50:
+                save(params, t)
             print("Iteration {} | vlb {}".format(t, -objective(params, t)))
 
-        log_posterior = lambda weights, t: log_post(weights, inputs, targets, prior_params)
 
-        vlb, grad_vlb, unpack_params = \
-            vlb_inference(log_posterior, N_weights=num_weights, N_samples=samples)
+
 
         callback_vlb = lambda params, t, g: callback(params, t, g, vlb)
 
         init_var_params = init_bnn_params(num_weights)
 
-        var_params = adam(grad_vlb, init_var_params,
+        var_params = adam(grad(vlb), init_var_params,
                           step_size=0.1, num_iters=iters_2, callback=callback_vlb)
 
     # PLOT STUFF BELOW HERE
 
-    def get_prior_draws(x_plot, prior_param, samples=5):
-        # sample functions from the gp, bnn, optimized bnn prior
-        f_bnn_gpp = sample_bnn(x_plot, samples, prior_param)    # f ~ p_bnn (f|phi)
-        f_bnn     = sample_bnn(x_plot, samples)                  # f ~ p_bnn (f)
-        f_gp      = sample_gp_prior(x_plot, samples)             # f ~ p_gp  (f)
-        return f_gp, f_bnn, f_bnn_gpp
 
     if save_plot:
         N_data = 400
@@ -145,16 +179,12 @@ if __name__ == '__main__':
         D = (inputs.ravel(), targets.ravel())
         x_plot = np.linspace(-8, 8, num=N_data)
         save_title = "exp-" + str(exp_num)
-        save_dir = os.path.join(os.getcwd(), 'plots', save_title)
 
-        # SAVE 3x1 PLOT of function drawn from the 3 priors
-        prior_p = get_prior_draws(x_plot, prior_params)
-        plot_priors(x_plot, prior_p, D, save_dir)
 
         # predictions from posterior of bnn
         p = sample_bnn(x_plot, N_samples, var_params)
 
         save_dir = os.path.join(os.getcwd(), 'plots', 'gpp-bnn', save_title+data)
-        plot_deciles(x_plot, p, D, save_dir, plot="gpp")
+        plotting.plot_deciles(x_plot, p, D, save_dir, plot="gpp")
 
 

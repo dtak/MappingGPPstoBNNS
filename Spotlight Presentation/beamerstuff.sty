@@ -1,0 +1,24 @@
+\beamertemplatenavigationsymbolsempty
+%\setbeamertemplate{blocks}[rounded][shadow=true]
+\setbeamertemplate{bibliography item}[text]
+
+\usetheme{Rochester} 
+\usecolortheme{beaver}
+\mode<presentation>
+{
+\setbeamercovered{transparent}
+  % \setbeamertemplate{items}[ball]
+  % \setbeamertemplate{theorems}[numbered]
+   \setbeamertemplate{footline}[frame number]
+}
+
+\AtBeginSection[]{
+  \begin{frame}
+  \vfill
+  \centering
+  \begin{beamercolorbox}[sep=8pt,center,shadow=true,rounded=true]{title}
+    \usebeamerfont{title}\insertsectionhead\par%
+  \end{beamercolorbox}
+  \vfill
+  \end{frame}
+}

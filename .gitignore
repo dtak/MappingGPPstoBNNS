@@ -36,4 +36,8 @@ coverage.xml
 
 .idea/ 
 
-.code/colors_check
+code/colors_check.py
+code/test_plot.py
+code/plots/exp/
+code/plots/gpp-bnn/exp/
+code/plots/bnn/exp/

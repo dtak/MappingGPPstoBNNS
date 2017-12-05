@@ -112,24 +112,24 @@ def plot_samples(x_plot, p, D, title="", plot="bnn"):
     plt.savefig(title+plot+"-samples.pdf", bbox_inches='tight')
 
 
-def plot_priors(x_plot, draws, D, title):
-    x, y = D
+def plot_priors(x_plot, draws, title):
 
     f_gp_prior, f_bnn_prior, f_gp_bnn_prior = draws
     f, ax = plt.subplots(3, sharex=True)
 
     # plot samples
-    ax[0].plot(x_plot, f_gp_prior, sns.xkcd_rgb["green"], lw=1, label=r"$f~ p_{gp}$")
-    ax[1].plot(x_plot, f_bnn_prior, sns.xkcd_rgb["blue"], lw=1, label=r"$f~ p_{bnn}(f|\phi^*)$")
-    ax[2].plot(x_plot, f_gp_bnn_prior, sns.xkcd_rgb["red"], lw=1,label=r"$f~ p_{bnn}(f|\phi^*)$")
+    ax[0].plot(x_plot, f_gp_prior, sns.xkcd_rgb["green"], lw=1)
+    ax[1].plot(x_plot, f_gp_bnn_prior, sns.xkcd_rgb["red"], lw=1)
+    ax[2].plot(x_plot, f_bnn_prior, sns.xkcd_rgb["blue"], lw=1)
+
 
     # plot data distribution
     # ax[2].fill_between(x, -3, 3, facecolor=sns.xkcd_rgb["silver"])
 
     plt.tick_params(labelbottom='off')
     plt.xlim([-8, 8])
-    plt.legend()
-    plt.savefig(title+"prior_draws.pdf", bbox_inches='tight')
+    plt.savefig(title+"samples.jpg", bbox_inches='tight')
+
 
 def plot_gp_posterior(x, xtest, y, s=1e-4, samples=10, title="", plot='gp'):
     N = len(x); print(N)
