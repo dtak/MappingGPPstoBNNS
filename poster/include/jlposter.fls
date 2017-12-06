@@ -1,0 +1,8 @@
+PWD /Users/jamesrequeima/Dropbox/PhD/Code/ThompsonSampling/icml_paper_distributed_thompson_sampling/icml_poster/poster/include
+INPUT /usr/local/texlive/2016/texmf.cnf
+INPUT /usr/local/texlive/2016/texmf-dist/web2c/texmf.cnf
+INPUT /usr/local/texlive/2016/texmf-var/web2c/pdftex/pdflatex.fmt
+INPUT jlposter.tex
+OUTPUT jlposter.log
+INPUT /usr/local/texlive/2016/texmf-dist/fonts/map/fontname/texfonts.map
+INPUT /usr/local/texlive/2016/texmf-dist/fonts/tfm/public/cm/cmss10.tfm
