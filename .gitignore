@@ -35,6 +35,7 @@ coverage.xml
 *.mo
 
 .idea/ 
+.DS_Store
 
 code/colors_check.py
 code/test_plot.py
@@ -43,3 +44,4 @@ code/plots/gpp-bnn/exp/
 code/plots/bnn/exp/
 
 poster/poster.pdf
+
