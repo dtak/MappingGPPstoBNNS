@@ -41,3 +41,5 @@ code/test_plot.py
 code/plots/exp/
 code/plots/gpp-bnn/exp/
 code/plots/bnn/exp/
+
+poster/poster.pdf
