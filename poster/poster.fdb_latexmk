@@ -1,5 +1,5 @@
 # Fdb version 3
-["pdflatex"] 1512676275 "poster.tex" "poster.pdf" "poster" 1512676278
+["pdflatex"] 1512686201 "poster.tex" "poster.pdf" "poster" 1512686204
   "/usr/local/texlive/2016/texmf-dist/fonts/map/fontname/texfonts.map" 1272929888 3287 e6b82fe08f5336d4d5ebc73fb1152e87 ""
   "/usr/local/texlive/2016/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
   "/usr/local/texlive/2016/texmf-dist/fonts/tfm/public/amsfonts/symbols/msbm10.tfm" 1246382020 908 2921f8a10601f252058503cc6570e581 ""
@@ -192,12 +192,12 @@
   "include/jlposter.tex" 1512527844 4280 b34cd262ee0e35376af3471f0ad56895 ""
   "include/picins.sty" 1512527844 18385 c97269161ead641c6b17219e71b626ab ""
   "mwhmacros.sty" 1512527844 3484 fed10ea1f547e2af02317fcb1edbff4a ""
-  "poster.aux" 1512676278 697 d37a964b081842503b4b5534f6fdcdb6 ""
-  "poster.out" 1512676276 0 d41d8cd98f00b204e9800998ecf8427e ""
-  "poster.tex" 1512675603 9046 f50327d3c2c83b3ef8fe5ea698c2abf2 ""
+  "poster.aux" 1512686203 697 d37a964b081842503b4b5534f6fdcdb6 ""
+  "poster.out" 1512686202 0 d41d8cd98f00b204e9800998ecf8427e ""
+  "poster.tex" 1512686201 9083 c7e1794fb3e6405c3bd0722b87bda5dc ""
   (generated)
-  "poster.log"
-  "poster.pdf"
-  "poster.out"
-  "a0header.ps"
   "poster.aux"
+  "poster.pdf"
+  "a0header.ps"
+  "poster.log"
+  "poster.out"

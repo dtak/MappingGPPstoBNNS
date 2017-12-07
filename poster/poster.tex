@@ -84,7 +84,7 @@
 
 \begin{document}
 \begin{minipage}[t][0pt]{\linewidth}
-\hspace{-6cm} 
+\hspace{-8cm} 
 %Align with edge of page, not margin
 \vspace{-1.5cm}
 \begin{tikzpicture}[overlay]
@@ -94,13 +94,15 @@
 
 {
 \hspace{0.5cm}
-\parbox{.2\textwidth}{
+\parbox{.1\textwidth}{\hspace{-2cm} 
   % \vspace{-.5cm}
-  \includegraphics[height=8cm]{badges/Utoronto_badge} \hspace{1cm}% 
-  \vspace{-.5cm}\mbox{\vspace{-1cm}\includegraphics[height=6cm]{badges/cambridge_badge} \hspace{1cm}}
+  \includegraphics[height=8cm]{badges/Utoronto_badge} \hspace{1cm}%
+} 
+\parbox{.1\textwidth}{\hspace{-1cm}
+  \vspace{-.5cm}\mbox{\includegraphics[height=6cm]{badges/cambridge_badge} \hspace{1cm}}
   }
-\hspace{-2cm}
-\parbox{.65\textwidth}{
+\hspace{-4cm}
+\parbox{.7\textwidth}{
   \vspace{0.5cm}%
   \begin{center}\color{white}
    \huge \textbf{Mapping Gaussian Processes to Bayesian Neural Networks}\vspace{3mm}\\
@@ -109,9 +111,9 @@
     $1$ University of Toronto, $2$ University of Cambridge, $3$ Invenia Labs
     \end{center}
   }%
-\hspace{2cm}
+\hspace{3cm}
 \parbox{.05\textwidth}{  
-  \begin{flushright}\vspace{-0.5cm}\includegraphics[height=6cm]{badges/inv_labs}\hfill% 
+  \begin{flushright}\vspace{0.5cm}\includegraphics[height=6cm]{badges/inv_labs}\hfill% 
   \end{flushright}}
 }%
 
