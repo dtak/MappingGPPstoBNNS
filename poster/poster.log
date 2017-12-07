@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2017.4.24)  5 DEC 2017 17:08
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2017.4.24)  7 DEC 2017 11:51
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1125,20 +1125,20 @@ Package: dsfont 1995/08/01 v0.1 Double stroke roman fonts
 (./include/jlposter.tex) (./poster.aux)
 \openout1 = `poster.aux'.
 
-LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
-LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 90.
-LaTeX Font Info:    ... okay on input line 90.
+LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for T1/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OT1/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OMS/cmsy/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
+LaTeX Font Info:    Checking defaults for PD1/pdf/m/n on input line 85.
+LaTeX Font Info:    ... okay on input line 85.
 
 (/usr/local/texlive/2016/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
@@ -1171,7 +1171,7 @@ File: epstopdf-sys.cfg 2010/07/13 v1.3 Configuration of (r)epstopdf for TeX Liv
 e
 ))
 \AtBeginShipoutBox=\box93
-Package hyperref Info: Link coloring OFF on input line 90.
+Package hyperref Info: Link coloring OFF on input line 85.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/hyperref/nameref.sty
 Package: nameref 2016/05/21 v2.44 Cross-referencing by name of section
@@ -1181,9 +1181,9 @@ Package: gettitlestring 2016/05/16 v1.5 Cleanup title references (HO)
 )
 \c@section@level=\count326
 )
-LaTeX Info: Redefining \ref on input line 90.
-LaTeX Info: Redefining \pageref on input line 90.
-LaTeX Info: Redefining \nameref on input line 90.
+LaTeX Info: Redefining \ref on input line 85.
+LaTeX Info: Redefining \pageref on input line 85.
+LaTeX Info: Redefining \nameref on input line 85.
 
 (./poster.out) (./poster.out)
 \@outlinefile=\write5
@@ -1224,27 +1224,27 @@ LaTeX Info: Redefining \nameref on input line 90.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Info: Redefining \dots on input line 90.
+LaTeX Info: Redefining \dots on input line 85.
 ABD: EveryShipout initializing macros
 <badges/Utoronto_badge.pdf, id=7, 569.0058pt x 569.0058pt>
 File: badges/Utoronto_badge.pdf Graphic file (type pdf)
 
 <use badges/Utoronto_badge.pdf>
-Package pdftex.def Info: badges/Utoronto_badge.pdf used on input line 106.
+Package pdftex.def Info: badges/Utoronto_badge.pdf used on input line 101.
 (pdftex.def)             Requested size: 227.61565pt x 227.62204pt.
 
 <badges/cambridge_badge.pdf, id=8, 2007.5pt x 2326.6925pt>
 File: badges/cambridge_badge.pdf Graphic file (type pdf)
 
 <use badges/cambridge_badge.pdf>
-Package pdftex.def Info: badges/cambridge_badge.pdf used on input line 106.
+Package pdftex.def Info: badges/cambridge_badge.pdf used on input line 101.
 (pdftex.def)             Requested size: 147.27838pt x 170.71652pt.
-LaTeX Font Info:    Try loading font information for U+msa on input line 106.
+LaTeX Font Info:    Try loading font information for U+msa on input line 101.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Try loading font information for U+msb on input line 106.
+LaTeX Font Info:    Try loading font information for U+msb on input line 101.
 
 (/usr/local/texlive/2016/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
@@ -1253,104 +1253,178 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 File: badges/inv_labs.pdf Graphic file (type pdf)
 
 <use badges/inv_labs.pdf>
-Package pdftex.def Info: badges/inv_labs.pdf used on input line 120.
+Package pdftex.def Info: badges/inv_labs.pdf used on input line 115.
 (pdftex.def)             Requested size: 170.72769pt x 170.71652pt.
 
-Overfull \hbox (55.5439pt too wide) in paragraph at lines 120--120
+Overfull \hbox (55.5439pt too wide) in paragraph at lines 115--115
  []
  []
 
-LaTeX Font Info:    Try loading font information for OMS+cmss on input line 169
+LaTeX Font Info:    Try loading font information for OMS+cmss on input line 140
 .
-LaTeX Font Info:    No file OMScmss.fd. on input line 169.
+LaTeX Font Info:    No file OMScmss.fd. on input line 140.
 
 LaTeX Font Warning: Font shape `OMS/cmss/m/n' undefined
 (Font)              using `OMS/cmsy/m/n' instead
-(Font)              for symbol `textbullet' on input line 169.
+(Font)              for symbol `textbullet' on input line 140.
 
 <figures/kernels.pdf, id=13, 3205.9775pt x 1786.675pt>
 File: figures/kernels.pdf Graphic file (type pdf)
 
 <use figures/kernels.pdf>
-Package pdftex.def Info: figures/kernels.pdf used on input line 179.
+Package pdftex.def Info: figures/kernels.pdf used on input line 145.
 (pdftex.def)             Requested size: 737.14816pt x 410.7903pt.
 
-<figures/kernels2.pdf, id=14, 3031.325pt x 1341.01pt>
-File: figures/kernels2.pdf Graphic file (type pdf)
-
-<use figures/kernels2.pdf>
-Package pdftex.def Info: figures/kernels2.pdf used on input line 181.
-(pdftex.def)             Requested size: 737.14816pt x 326.08464pt.
-
-Underfull \hbox (badness 10000) in paragraph at lines 177--183
-
- []
-
-
-Overfull \hbox (15.37189pt too wide) in paragraph at lines 137--197
+Overfull \hbox (15.37189pt too wide) in paragraph at lines 132--174
 [][] 
  []
 
+<figures/priors/zogpp.pdf, id=14, 515.28508pt x 108.02238pt>
+File: figures/priors/zogpp.pdf Graphic file (type pdf)
 
-Overfull \hbox (28.72505pt too wide) in paragraph at lines 199--223
+<use figures/priors/zogpp.pdf>
+Package pdftex.def Info: figures/priors/zogpp.pdf used on input line 209.
+(pdftex.def)             Requested size: 260.17244pt x 54.5418pt.
+
+<figures/priors/zogppbnn.pdf, id=15, 515.28508pt x 108.02238pt>
+File: figures/priors/zogppbnn.pdf Graphic file (type pdf)
+
+<use figures/priors/zogppbnn.pdf>
+Package pdftex.def Info: figures/priors/zogppbnn.pdf used on input line 210.
+(pdftex.def)             Requested size: 260.17244pt x 54.5418pt.
+
+<figures/priors/zobnn.pdf, id=16, 515.28508pt x 108.02238pt>
+File: figures/priors/zobnn.pdf Graphic file (type pdf)
+
+<use figures/priors/zobnn.pdf>
+Package pdftex.def Info: figures/priors/zobnn.pdf used on input line 211.
+(pdftex.def)             Requested size: 260.17244pt x 54.5418pt.
+
+Overfull \hbox (0.69011pt too wide) in paragraph at lines 205--213
+[] 
+ []
+
+
+Overfull \hbox (28.72505pt too wide) in paragraph at lines 176--219
 []  [] 
  []
 
-<figures/results_thompson_sampling.pdf, id=15, 361.35pt x 118.68944pt>
-File: figures/results_thompson_sampling.pdf Graphic file (type pdf)
+<figures/xsinxgp.pdf, id=17, 462.52798pt x 320.51746pt>
+File: figures/xsinxgp.pdf Graphic file (type pdf)
 
-<use figures/results_thompson_sampling.pdf>
-Package pdftex.def Info: figures/results_thompson_sampling.pdf used on input li
-ne 233.
-(pdftex.def)             Requested size: 691.06763pt x 227.01183pt.
+<use figures/xsinxgp.pdf>
+Package pdftex.def Info: figures/xsinxgp.pdf used on input line 236.
+(pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
 
-<figures/epsilon_table.pdf, id=16, 2567.5925pt x 1670.24pt>
-File: figures/epsilon_table.pdf Graphic file (type pdf)
+<figures/expxgp.pdf, id=18, 462.52798pt x 320.51746pt>
+File: figures/expxgp.pdf Graphic file (type pdf)
 
-<use figures/epsilon_table.pdf>
-Package pdftex.def Info: figures/epsilon_table.pdf used on input line 253.
-(pdftex.def)             Requested size: 276.42282pt x 179.80215pt.
+<use figures/expxgp.pdf>
+Package pdftex.def Info: figures/expxgp.pdf used on input line 237.
+(pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
+
+<figures/xsinxbnn.pdf, id=19, 462.52798pt x 320.51746pt>
+File: figures/xsinxbnn.pdf Graphic file (type pdf)
+
+<use figures/xsinxbnn.pdf>
+Package pdftex.def Info: figures/xsinxbnn.pdf used on input line 241.
+(pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
+
+<figures/expxbnn.pdf, id=20, 462.52798pt x 320.51746pt>
+File: figures/expxbnn.pdf Graphic file (type pdf)
+
+<use figures/expxbnn.pdf>
+Package pdftex.def Info: figures/expxbnn.pdf used on input line 242.
+(pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
+
+<figures/xsinxgppbnn.pdf, id=21, 462.52798pt x 320.51746pt>
+File: figures/xsinxgppbnn.pdf Graphic file (type pdf)
+
+<use figures/xsinxgppbnn.pdf>
+Package pdftex.def Info: figures/xsinxgppbnn.pdf used on input line 245.
+(pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
+
+<figures/expxgppbnn.pdf, id=22, 462.52798pt x 320.51746pt>
+File: figures/expxgppbnn.pdf Graphic file (type pdf)
+
+<use figures/expxgppbnn.pdf>
+Package pdftex.def Info: figures/expxgppbnn.pdf used on input line 246.
+(pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
  [1
 
 
 Non-PDF special ignored!
 Non-PDF special ignored!{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/upd
 map/pdftex.map} <./badges/Utoronto_badge.pdf> <./badges/cambridge_badge.pdf> <.
-/badges/inv_labs.pdf> <./figures/kernels.pdf> <./figures/kernels2.pdf> <./figur
-es/results_thompson_sampling.pdf> <./figures/epsilon_table.pdf>]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 273.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 273.
+/badges/inv_labs.pdf> <./figures/kernels.pdf> <./figures/priors/zogpp.pdf> <./f
+igures/priors/zogppbnn.pdf
+
+pdfTeX warning: pdflatex (file ./figures/priors/zogppbnn.pdf): PDF inclusion: m
+ultiple pdfs with page group included in a single page
+> <./figures/priors/zobnn.pdf
+
+pdfTeX warning: pdflatex (file ./figures/priors/zobnn.pdf): PDF inclusion: mult
+iple pdfs with page group included in a single page
+> <./figures/xsinxgp.pdf
+
+pdfTeX warning: pdflatex (file ./figures/xsinxgp.pdf): PDF inclusion: multiple 
+pdfs with page group included in a single page
+> <./figures/expxgp.pdf
+
+pdfTeX warning: pdflatex (file ./figures/expxgp.pdf): PDF inclusion: multiple p
+dfs with page group included in a single page
+> <./figures/xsinxbnn.pdf
+
+pdfTeX warning: pdflatex (file ./figures/xsinxbnn.pdf): PDF inclusion: multiple
+ pdfs with page group included in a single page
+> <./figures/expxbnn.pdf
+
+pdfTeX warning: pdflatex (file ./figures/expxbnn.pdf): PDF inclusion: multiple 
+pdfs with page group included in a single page
+> <./figures/xsinxgppbnn.pdf
+
+pdfTeX warning: pdflatex (file ./figures/xsinxgppbnn.pdf): PDF inclusion: multi
+ple pdfs with page group included in a single page
+> <./figures/expxgppbnn.pdf
+
+pdfTeX warning: pdflatex (file ./figures/expxgppbnn.pdf): PDF inclusion: multip
+le pdfs with page group included in a single page
+>]
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 269.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 269.
  (./poster.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 273.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 273.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 269.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 269.
 Package rerunfilecheck Info: File `poster.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 
+
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 273.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 269.
  ) 
 Here is how much of TeX's memory you used:
- 27909 strings out of 493013
- 538445 string characters out of 6133343
- 625819 words of memory out of 5000000
- 31014 multiletter control sequences out of 15000+600000
- 20848 words of font info for 76 fonts, out of 8000000 for 9000
+ 27920 strings out of 493013
+ 538763 string characters out of 6133343
+ 629797 words of memory out of 5000000
+ 31019 multiletter control sequences out of 15000+600000
+ 16223 words of font info for 59 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 55i,17n,60p,10442b,998s stack positions out of 5000i,500n,10000p,200000b,80000s
-</usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb
-></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb
-></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb><
-/usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmss12.pfb></
-usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmss17.pfb></u
-sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb></
-usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></u
-sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb
->
-Output written on poster.pdf (1 page, 3110471 bytes).
+ 55i,18n,60p,10442b,937s stack positions out of 5000i,500n,10000p,200000b,80000s
+</usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmbx12.pfb
+></usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb>
+</usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi12.pfb><
+/usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmmib10.pfb><
+/usr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmr17.pfb></u
+sr/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmss12.pfb></us
+r/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmss17.pfb></usr
+/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb></us
+r/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr
+/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
+Output written on poster.pdf (1 page, 1850735 bytes).
 PDF statistics:
- 159 PDF objects out of 1000 (max. 8388607)
- 97 compressed objects within 1 object stream
- 3 named destinations out of 1000 (max. 500000)
- 54 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 149 PDF objects out of 1000 (max. 8388607)
+ 80 compressed objects within 1 object stream
+ 2 named destinations out of 1000 (max. 500000)
+ 84 words of extra memory for PDF output out of 10000 (max. 10000000)
 
