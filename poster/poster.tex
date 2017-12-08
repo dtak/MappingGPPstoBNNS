@@ -93,25 +93,25 @@
 \end{tikzpicture}
 
 {
-\hspace{0.5cm}
-\parbox{.1\textwidth}{\hspace{-2cm} 
+\hspace{-0cm}%
+\parbox{.08\textwidth}{\hspace{-2cm} 
   % \vspace{-.5cm}
-  \includegraphics[height=8cm]{badges/Utoronto_badge} \hspace{1cm}%
+  \includegraphics[height=8cm]{badges/Utoronto_badge} \hspace{-4cm}%
 } 
-\parbox{.1\textwidth}{\hspace{-1cm}
+\parbox{.09\textwidth}{\hspace{-1cm}
   \vspace{-.5cm}\mbox{\includegraphics[height=6cm]{badges/cambridge_badge} \hspace{1cm}}
   }
-\hspace{-4cm}
-\parbox{.7\textwidth}{
+\hspace{-2cm}
+\parbox{.75\textwidth}{
   \vspace{0.5cm}%
   \begin{center}\color{white}
-   \huge \textbf{Mapping Gaussian Processes to Bayesian Neural Networks}\vspace{3mm}\\
-    \large Daniel Flam-Shepherd$^{\,1}$, James Requeima$^{\,2\,3}$, David Duvenaud$^{\,1}$\\
+   \Huge \textbf{Mapping Gaussian Processes to Bayesian Neural Networks}\vspace{3mm}\\
+    \huge Daniel Flam-Shepherd$^{\,1}$, James Requeima$^{\,2\,3}$, David Duvenaud$^{\,1}$\\
     \color{white}\large 
     $1$ University of Toronto, $2$ University of Cambridge, $3$ Invenia Labs
     \end{center}
   }%
-\hspace{3cm}
+\hspace{1cm}
 \parbox{.05\textwidth}{  
   \begin{flushright}\vspace{0.5cm}\includegraphics[height=6cm]{badges/inv_labs}\hfill% 
   \end{flushright}}
@@ -141,7 +141,7 @@
 \begin{itemize}
   \item \col{\bf Baysian Neural Network Priors} are specified in parameter space. The implications of these priors in function space are hard to interpret.
   \item How to we incorporate prior knowledge about function properties in our prior?
-  \item \col{Gaussian Processes} have a elegant mechanism for incorporating prior beliefs about functions - the mean and covariance functions.
+  \item \col{Gaussian Processes} can elegantly  incorporate prior beliefs about functions through the mean and covariance functions.
 \end{itemize}
 \vspace{1cm}
 \includegraphics[width=\textwidth]{figures/kernels.pdf}
@@ -155,7 +155,7 @@
 
 How can we find a prior on weights $p(w)$ that produces functions similar to a GP prior?
 
-W $ \bm \phi ^* =  \amin{\bm \phi}   \E _{\X \sim p(\X)}  \kl [\pbnn (\bm f(\X) |  \bm \phi ) | \pgp (\bm f(\X )  ] $
+$$ \bm \phi ^* =  \amin{\bm \phi}   \E _{\X \sim p(\X)}  \kl [\pbnn (\bm f(\X) |  \bm \phi ) | \pgp (\bm f(\X )  ] $$
 \begin{eqnarray*}
 \kl [\pbnn (\bm f(\X) |  \bm \phi ) || \pgp (\bm f(\X )  ] = \qquad \qquad \qquad \qquad \\   
 -\entropy [\pbnn (\bm f(\X) |  \bm \phi ) ]
@@ -181,7 +181,7 @@ We can estimate the likelihood with simple Monte Carlo, but how can we estimate 
 
 %\vspace{1cm}
  
-\mysection{Estimating Entropy of BNN Priors}{
+\mysection{Estimating the Entropy of BNN Priors}{
 
 \col{1) Moment matching:}
 
@@ -206,14 +206,14 @@ Introduce noise $\B y = \bm f +\bm \epsilon$, and approximate $\log p (\B y( \X)
 \setlength{\tabcolsep}{-0.25cm}
 
 \begin{center}  
-\textcolor{Green}{Gaussian Process Posterior}\\
+\textcolor{Green}{Gaussian Process Prior}\\
 \includegraphics[width=0.8\textwidth]{figures/prior_GP.pdf}\\
 %\vspace{-1cm}
 %$$\textcolor{Green}{\bm f(\X) \sim \pgp (\bm f | \D )} $$
-\textcolor{Blue}{Standard BNN Posterior}\\
+\textcolor{Blue}{Standard BNN Prior}\\
 \includegraphics[width=0.8\textwidth]{figures/prior_BNN.pdf} \\   
 %\vspace{-1cm}
-\textcolor{Red}{GP-BNN Posterior}\\
+\textcolor{Red}{GP-BNN Prior}\\
 \includegraphics[width=0.8\textwidth]{figures/prior_GPBNN.pdf} \\
 \end{center}
 
@@ -231,10 +231,10 @@ Introduce noise $\B y = \bm f +\bm \epsilon$, and approximate $\log p (\B y( \X)
 %\vspace{1cm}
 
 
-\mysection{Posterior Results }{
+\mysection{Posterior Results using GP Priors}{
 
 We test our model (blue) on 2 different toy problems. 
-All BNNs are 2 layer with rbf activation functions. GPs use RBF kernels. 
+All BNNs are 2 layer with rbf activation functions. The GP priors used RBF kernels. 
 
 %\hspace{2cm} $f(x) =x\sin x/10$ \hspace{4cm}  $f(x)= e^{-x^2/2} $
 \begin{center}  
@@ -264,9 +264,9 @@ All BNNs are 2 layer with rbf activation functions. GPs use RBF kernels.
 
 \mysection{Manifesto}
 \begin{itemize}
-\item Specifying properties of functions and architectures should be separate decisions.
+\item Specifying properties of functions should be the first decision, and computational architecture follows.
 \item Priors on functions are more interpretable than priors on parameters.
-\item Parameterization should be an implementation detail
+%\item Parameterization should be an implementation detail
 \end{itemize}
 \end{minipage}
 
