@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2017.4.24)  7 DEC 2017 14:36
+This is pdfTeX, Version 3.14159265-2.6-1.40.17 (TeX Live 2016) (preloaded format=pdflatex 2017.4.24)  7 DEC 2017 18:22
 entering extended mode
  \write18 enabled.
  %&-line parsing enabled.
@@ -1279,33 +1279,28 @@ Overfull \hbox (15.37189pt too wide) in paragraph at lines 134--176
 [][] 
  []
 
-<figures/priors/zogpp.pdf, id=14, 515.28508pt x 108.02238pt>
-File: figures/priors/zogpp.pdf Graphic file (type pdf)
+<figures/prior_GP.pdf, id=14, 1065.25983pt x 261.8583pt>
+File: figures/prior_GP.pdf Graphic file (type pdf)
 
-<use figures/priors/zogpp.pdf>
-Package pdftex.def Info: figures/priors/zogpp.pdf used on input line 211.
-(pdftex.def)             Requested size: 260.17244pt x 54.5418pt.
+<use figures/prior_GP.pdf>
+Package pdftex.def Info: figures/prior_GP.pdf used on input line 210.
+(pdftex.def)             Requested size: 589.72078pt x 144.96147pt.
 
-<figures/priors/zogppbnn.pdf, id=15, 515.28508pt x 108.02238pt>
-File: figures/priors/zogppbnn.pdf Graphic file (type pdf)
+<figures/prior_BNN.pdf, id=15, 1071.28233pt x 232.2276pt>
+File: figures/prior_BNN.pdf Graphic file (type pdf)
 
-<use figures/priors/zogppbnn.pdf>
-Package pdftex.def Info: figures/priors/zogppbnn.pdf used on input line 212.
-(pdftex.def)             Requested size: 260.17244pt x 54.5418pt.
+<use figures/prior_BNN.pdf>
+Package pdftex.def Info: figures/prior_BNN.pdf used on input line 214.
+(pdftex.def)             Requested size: 589.72078pt x 127.83896pt.
 
-<figures/priors/zobnn.pdf, id=16, 515.28508pt x 108.02238pt>
-File: figures/priors/zobnn.pdf Graphic file (type pdf)
+<figures/prior_GPBNN.pdf, id=16, 1062.60991pt x 277.2759pt>
+File: figures/prior_GPBNN.pdf Graphic file (type pdf)
 
-<use figures/priors/zobnn.pdf>
-Package pdftex.def Info: figures/priors/zobnn.pdf used on input line 213.
-(pdftex.def)             Requested size: 260.17244pt x 54.5418pt.
+<use figures/prior_GPBNN.pdf>
+Package pdftex.def Info: figures/prior_GPBNN.pdf used on input line 217.
+(pdftex.def)             Requested size: 589.72078pt x 153.8857pt.
 
-Overfull \hbox (0.69011pt too wide) in paragraph at lines 207--215
-[] 
- []
-
-
-Overfull \hbox (28.72505pt too wide) in paragraph at lines 178--221
+Overfull \hbox (28.72505pt too wide) in paragraph at lines 178--225
 []  [] 
  []
 
@@ -1313,42 +1308,42 @@ Overfull \hbox (28.72505pt too wide) in paragraph at lines 178--221
 File: figures/xsinxgp.pdf Graphic file (type pdf)
 
 <use figures/xsinxgp.pdf>
-Package pdftex.def Info: figures/xsinxgp.pdf used on input line 238.
+Package pdftex.def Info: figures/xsinxgp.pdf used on input line 242.
 (pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
 
 <figures/expxgp.pdf, id=18, 462.52798pt x 320.51746pt>
 File: figures/expxgp.pdf Graphic file (type pdf)
 
 <use figures/expxgp.pdf>
-Package pdftex.def Info: figures/expxgp.pdf used on input line 239.
+Package pdftex.def Info: figures/expxgp.pdf used on input line 243.
 (pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
 
 <figures/xsinxbnn.pdf, id=19, 462.52798pt x 320.51746pt>
 File: figures/xsinxbnn.pdf Graphic file (type pdf)
 
 <use figures/xsinxbnn.pdf>
-Package pdftex.def Info: figures/xsinxbnn.pdf used on input line 243.
+Package pdftex.def Info: figures/xsinxbnn.pdf used on input line 247.
 (pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
 
 <figures/expxbnn.pdf, id=20, 462.52798pt x 320.51746pt>
 File: figures/expxbnn.pdf Graphic file (type pdf)
 
 <use figures/expxbnn.pdf>
-Package pdftex.def Info: figures/expxbnn.pdf used on input line 244.
+Package pdftex.def Info: figures/expxbnn.pdf used on input line 248.
 (pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
 
 <figures/xsinxgppbnn.pdf, id=21, 462.52798pt x 320.51746pt>
 File: figures/xsinxgppbnn.pdf Graphic file (type pdf)
 
 <use figures/xsinxgppbnn.pdf>
-Package pdftex.def Info: figures/xsinxgppbnn.pdf used on input line 247.
+Package pdftex.def Info: figures/xsinxgppbnn.pdf used on input line 251.
 (pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
 
 <figures/expxgppbnn.pdf, id=22, 462.52798pt x 320.51746pt>
 File: figures/expxgppbnn.pdf Graphic file (type pdf)
 
 <use figures/expxgppbnn.pdf>
-Package pdftex.def Info: figures/expxgppbnn.pdf used on input line 248.
+Package pdftex.def Info: figures/expxgppbnn.pdf used on input line 252.
 (pdftex.def)             Requested size: 331.7095pt x 229.87738pt.
  [1
 
@@ -1356,20 +1351,9 @@ Package pdftex.def Info: figures/expxgppbnn.pdf used on input line 248.
 Non-PDF special ignored!
 Non-PDF special ignored!{/usr/local/texlive/2016/texmf-var/fonts/map/pdftex/upd
 map/pdftex.map} <./badges/Utoronto_badge.pdf> <./badges/cambridge_badge.pdf> <.
-/badges/inv_labs.pdf> <./figures/kernels.pdf> <./figures/priors/zogpp.pdf> <./f
-igures/priors/zogppbnn.pdf
-
-pdfTeX warning: pdflatex (file ./figures/priors/zogppbnn.pdf): PDF inclusion: m
-ultiple pdfs with page group included in a single page
-> <./figures/priors/zobnn.pdf
-
-pdfTeX warning: pdflatex (file ./figures/priors/zobnn.pdf): PDF inclusion: mult
-iple pdfs with page group included in a single page
-> <./figures/xsinxgp.pdf
-
-pdfTeX warning: pdflatex (file ./figures/xsinxgp.pdf): PDF inclusion: multiple 
-pdfs with page group included in a single page
-> <./figures/expxgp.pdf
+/badges/inv_labs.pdf> <./figures/kernels.pdf> <./figures/prior_GP.pdf> <./figur
+es/prior_BNN.pdf> <./figures/prior_GPBNN.pdf> <./figures/xsinxgp.pdf> <./figure
+s/expxgp.pdf
 
 pdfTeX warning: pdflatex (file ./figures/expxgp.pdf): PDF inclusion: multiple p
 dfs with page group included in a single page
@@ -1390,23 +1374,23 @@ ple pdfs with page group included in a single page
 pdfTeX warning: pdflatex (file ./figures/expxgppbnn.pdf): PDF inclusion: multip
 le pdfs with page group included in a single page
 >]
-Package atveryend Info: Empty hook `BeforeClearDocument' on input line 271.
-Package atveryend Info: Empty hook `AfterLastShipout' on input line 271.
+Package atveryend Info: Empty hook `BeforeClearDocument' on input line 276.
+Package atveryend Info: Empty hook `AfterLastShipout' on input line 276.
  (./poster.aux)
-Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 271.
-Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 271.
+Package atveryend Info: Executing hook `AtVeryEndDocument' on input line 276.
+Package atveryend Info: Executing hook `AtEndAfterFileList' on input line 276.
 Package rerunfilecheck Info: File `poster.out' has not changed.
 (rerunfilecheck)             Checksum: D41D8CD98F00B204E9800998ECF8427E;0.
 
 
 LaTeX Font Warning: Some font shapes were not available, defaults substituted.
 
-Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 271.
+Package atveryend Info: Empty hook `AtVeryVeryEnd' on input line 276.
  ) 
 Here is how much of TeX's memory you used:
- 27920 strings out of 493013
- 538763 string characters out of 6133343
- 629797 words of memory out of 5000000
+ 27919 strings out of 493013
+ 538714 string characters out of 6133343
+ 630797 words of memory out of 5000000
  31019 multiletter control sequences out of 15000+600000
  16223 words of font info for 59 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
@@ -1421,10 +1405,10 @@ r/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmss17.pfb></usr
 /local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmssbx10.pfb></us
 r/local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb></usr
 /local/texlive/2016/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb>
-Output written on poster.pdf (1 page, 1850743 bytes).
+Output written on poster.pdf (1 page, 10615513 bytes).
 PDF statistics:
- 149 PDF objects out of 1000 (max. 8388607)
- 80 compressed objects within 1 object stream
+ 146 PDF objects out of 1000 (max. 8388607)
+ 77 compressed objects within 1 object stream
  2 named destinations out of 1000 (max. 500000)
  84 words of extra memory for PDF output out of 10000 (max. 10000000)
 

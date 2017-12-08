@@ -180,11 +180,9 @@ We can estimate the likelihood with simple Monte Carlo, but how can we estimate 
 
 
 %\vspace{1cm}
-
+ 
 \mysection{Estimating Entropy of BNN Priors}{
- 
-We tried three approaches:
- 
+
 \col{1) Moment matching:}
 
 Approximate {${\pbnn (\bm f (\X) |  \bm \phi ) \approx \N (\bm f | \bm \mu_{\bm f(\X) },\ \bm \Sigma _{\bm f(\X) } )}$}
@@ -202,16 +200,22 @@ Introduce noise $\B y = \bm f +\bm \epsilon$, and approximate $\log p (\B y( \X)
 }
 \col{3) Early stopping} to avoid mode collapse. 
 
-\mysection{Prior Results}{
+\vspace{0.5cm}
+
+\mysection{Samples from Approximate Priors}{
 \setlength{\tabcolsep}{-0.25cm}
-\begin{tabular}{ccc}
-\small \textcolor{Green}{Gaussian Process Prior}  &
-\small \textcolor{Red}{GP-BNN Prior} &
-\small \textcolor{Blue}{Standard BNN Prior} \\ \normalsize
-{\includegraphics[width = 3.6in]{figures/priors/zogpp}} &
-{\includegraphics[width = 3.6in]{figures/priors/zogppbnn}} &
-{\includegraphics[width = 3.6in]{figures/priors/zobnn}} \\ % TOO SMALL ??
-\end{tabular}
+
+\begin{center}  
+\textcolor{Green}{Gaussian Process Posterior}\\
+\includegraphics[width=0.8\textwidth]{figures/prior_GP.pdf}\\
+%\vspace{-1cm}
+%$$\textcolor{Green}{\bm f(\X) \sim \pgp (\bm f | \D )} $$
+\textcolor{Blue}{Standard BNN Posterior}\\
+\includegraphics[width=0.8\textwidth]{figures/prior_BNN.pdf} \\   
+%\vspace{-1cm}
+\textcolor{Red}{GP-BNN Posterior}\\
+\includegraphics[width=0.8\textwidth]{figures/prior_GPBNN.pdf} \\
+\end{center}
 
 
 }
@@ -260,8 +264,9 @@ All BNNs are 2 layer with rbf activation functions. GPs use RBF kernels.
 
 \mysection{Manifesto}
 \begin{itemize}
+\item Specifying properties of functions and architectures should be separate decisions.
 \item Priors on functions are more interpretable than priors on parameters.
-\item Parameterization should just be an implementation detail
+\item Parameterization should be an implementation detail
 \end{itemize}
 \end{minipage}
 
