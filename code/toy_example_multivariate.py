@@ -1,6 +1,8 @@
 import autograd.numpy as np
 import autograd.numpy.random as npr
 import matplotlib.pyplot as plt
+from matplotlib import gridspec
+
 from autograd.misc.optimizers import adam
 from autograd import grad
 from autograd.scipy.stats import multivariate_normal as mvn
@@ -52,18 +54,6 @@ def kl_estimate(params, N_samples, x, layer_sizes, mean, cov):
     y = sample_obs(params, N_samples, x, layer_sizes)
     return -entropy_estimate(y) - np.mean(mvn.logpdf(y, mean, cov))
 
-def plot_isocontours(ax, func, xlimits=[-5, 5], ylimits=[-5, 5], numticks=1000, *args, **kwargs):
-    x = np.linspace(*xlimits, num=numticks)
-    y = np.linspace(*ylimits, num=numticks)
-    X, Y = np.meshgrid(x, y)
-    zs = func(np.concatenate([np.atleast_2d(X.ravel()), np.atleast_2d(Y.ravel())]).T)
-    Z = zs.reshape(X.shape)
-    levels = np.arange(-15.0, 10.5, 2.)
-    ax.contour(X, Y, Z, levels=levels, *args, **kwargs)
-    ax.set_yticks([])
-    ax.set_xticks([])
-
-
 if __name__ == '__main__':
 
     iters = 500
@@ -71,23 +61,30 @@ if __name__ == '__main__':
 
     inputs = np.array([[-1.], [0.], [1.], [2.]])
 
-    real_mean = np.array([0., 1., 0, 1.])
-    r = np.array([[1.0, 2.0, 0., 0.],
-                  [0., 1.0, 0., 1.],
-                  [1.0, .0, 1., 1.],
-                  [1., 1., 0., 1.]])
-    real_cov = np.dot(r.T, r)
+    real_mean = np.array([0., 0., 0., 0.])
 
-    layer_sizes = [1, 10, 10, 1]
-    N_samples = 100
+    r = np.array([[1.0, 0.0, 0.0, 0.0],
+                  [1.0, 1.0, 0.0, 1.0],
+                  [0.0, 0.0, 1.0, 0.0],
+                  [0.0, 0.0, 1.0, 1.0]])
+
+    real_cov = np.dot(r.T, r)
+    print(real_cov)
+
+    layer_sizes = [1, 100, 100, 1]
+    N_samples = 5000
 
     fig = plt.figure(figsize=(8, 8), facecolor='white')
-    ax1 = fig.add_subplot(221, frameon=False)
-    #fig2 = plt.figure(figsize=(8, 8), facecolor='white')
-    ax2 = fig.add_subplot(223, frameon=False)
-    ax3 = fig.add_subplot(224, frameon=False)
+    gs = gridspec.GridSpec(3, 2
+                           )
+    ax1 = fig.add_subplot(gs[0, :], frameon=False)
+    ax2 = fig.add_subplot(gs[1, 0], frameon=False)
+    ax3 = fig.add_subplot(gs[1, 1], frameon=False)
+    ax4 = fig.add_subplot(gs[2, :], frameon=False)
     plt.ion()
     plt.show(block=False)
+    kls = []
+    min_kls = []
 
     def obj(params, t):
         return kl_estimate(params, N_samples, inputs, layer_sizes, real_mean, real_cov)
@@ -129,11 +126,25 @@ if __name__ == '__main__':
         _, y_cov = np.mean(samples, axis=0), np.cov(samples.T)
         ax.imshow(y_cov)
 
+    def plot_kls(ax, kls, min_kls):
+        if min_kls[-1] < 1.:
+            ax.set_ylim([0, 1])
+        else:
+            ax.set_ylim([0, 10])
+        ax.plot(kls)
+        ax.plot(min_kls)
+
     def callback_kl(prior_params, iter, g):
+        kl = obj(prior_params, iter)
+        kls.append(kl)
+        min_kls.append(np.amin(kls))
+        print("Iteration {} KL {} ".format(iter, kl))
+
+
         plot_lines(ax1, prior_params, inputs)
         plot_heatmap(ax2, prior_params)
         ax3.imshow(real_cov)
-        print("Iteration {} KL {} ".format(iter, obj(prior_params, iter)))
+        plot_kls(ax4, kls, min_kls)
 
         plt.draw()
         # plt.savefig(os.path.join(plotting_dir, 'contours_iteration_' + str(iter) + '.pdf'))
@@ -141,6 +152,14 @@ if __name__ == '__main__':
         ax1.cla()
         ax2.cla()
         ax3.cla()
+        ax4.cla()
+
+        if iter % 10 == 0:
+            samples = sample_obs(prior_params, N_samples, inputs, layer_sizes)
+            y_mean, y_cov = np.mean(samples, axis=0), np.cov(samples.T)
+            print(y_cov - real_cov)
+            print(y_mean - real_mean)
+
 
     init_var_params = init_bnn_params(layer_sizes, scale=-1.5)
-    prior_params = adam(grad(obj), init_var_params, step_size=0.05, num_iters=iters, callback=callback_kl)
+    prior_params = adam(grad(obj), init_var_params, step_size=0.1, num_iters=iters, callback=callback_kl)

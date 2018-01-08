@@ -141,5 +141,10 @@ if __name__ == '__main__':
         ax2.cla()
         ax3.cla()
 
+        if iter % 10 == 0:
+            samples = sample_obs(prior_params, N_samples, inputs, layer_sizes)
+            _, y_cov = np.mean(samples, axis=0), np.cov(samples.T)
+            print(y_cov - real_cov)
+
     init_var_params = init_bnn_params(layer_sizes, scale=-1.5)
     prior_params = adam(grad(obj), init_var_params, step_size=0.1, num_iters=iters, callback=callback_kl)
