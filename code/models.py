@@ -1,7 +1,7 @@
 import autograd.numpy as np
 import autograd.numpy.random as npr
 from autograd.numpy.linalg import solve, cholesky, det
-from autograd import grad
+from autograd import grad, value_and_grad
 from kernels import kernel_dict
 rs = npr.RandomState(0)
 
@@ -80,9 +80,29 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
 
         s= 1e-6*np.eye(len(x))
         K = covariance(x, x) +s                     # shape [N_data, N_data]
-        L = cholesky(K)+s                                 # shape K = LL^T
-        a = solve(L, f_bnn)                             # shape = shape f_bnn (L^-1 f_bnn)
+        L = cholesky(K)+s                            # shape K = LL^T
+        a = solve(L, f_bnn)                     # shape = shape f_bnn (L^-1 f_bnn)
         log_gp = -0.5*np.mean(a**2, axis=0)             # Compute E_{X~p(X)}
+        return log_gp
+
+    def log_gp_joint_gradient_and_prediction_prior(f_bnn, df_bnn, x, t):
+        """
+        Compute the log probability of observing `predictions` as the values
+        and `gradients` as the derivatives of the function
+        evaluated at `samples`, given gaussian process parameters `t`.  """
+        s = 1e-6*np.eye(len(x)*2)
+
+        K_f_f = covariance(x, x)
+        K_f_df, K_df_df = value_and_grad(grad(covariance))(x)
+
+        K = np.block([
+          [K_f_f, K_f_df],
+          [K_f_df, K_df_df]
+        ]) + s
+
+        L = cholesky(K) + s
+        a = solve(L, f_bnn)
+        log_gp = -0.5*np.mean(a**2, axis=0)
         return log_gp
 
     def entropy_estimate(f_bnn):
@@ -106,6 +126,8 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
 
         return entropy
 
+
+
     def kl_objective(params, t):
         """
         Provides a stochastic estimate of the kl divergence
@@ -120,8 +142,14 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         prior_mean, prior_log_std = unpack_params(params)
         bnn_weights = rs.randn(N_samples, N_weights) * np.exp(prior_log_std) + prior_mean
         x = np.random.uniform(low=-10, high=10, size=(n_data, 1))
-        f_bnn = predictions(bnn_weights, x)[:, :, 0].T  # shape [N_data, N_weights_samples]
-        kl = - entropy_estimate(f_bnn) - np.mean(log_gp_prior(f_bnn, x,  t))
+
+        bnn_predictions, bnn_gradients = value_and_grad(lambda x: predictions(bnn_weights, x)[:, :, 0].T)(x)
+
+        observation_logprob = np.mean(
+            log_gp_joint_gradient_and_prediction_prior(
+              bnn_predictions, bnn_gradients, x, t))
+
+        kl = - entropy_estimate(f_bnn) - observation_logprob
         return kl
 
     grad_kl = grad(kl_objective)
