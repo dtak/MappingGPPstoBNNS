@@ -22,7 +22,7 @@ if __name__ == '__main__':
     softp = lambda x: np.log(1+np.exp(x))
 
     exp_num = 8
-    x_num = 400
+    x_num = 36
     samples = 20
     arch = [1, 20, 20, 1]
     act = "rbf"
@@ -48,7 +48,8 @@ if __name__ == '__main__':
     num_weights, bnn_predict, unpack_params, \
     init_bnn_params, sample_bnn, sample_gpp, \
     kl, grad_kl = map_gpp_bnn(layer_sizes=arch, nonlinearity=rbf,
-                              n_data=x_num, N_samples=samples, kernel=kern)
+                              n_data=x_num, N_samples=samples, kernel=kern,
+                              match_gradients=True)
 
     if plot_during:
         f, ax = plt.subplots(3, sharex=True)

@@ -1,7 +1,7 @@
 import autograd.numpy as np
 import autograd.numpy.random as npr
 from autograd.numpy.linalg import solve, cholesky, det
-from autograd import grad, value_and_grad
+from autograd import grad, elementwise_grad, value_and_grad, jacobian
 from kernels import kernel_dict
 rs = npr.RandomState(0)
 
@@ -93,13 +93,31 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         evaluated at `samples`, given gaussian process parameters `t`.  """
         s = 1e-6*np.eye(len(x)*2)
 
+        x1 = x
+        x2 = x
+        def row_grad(i, fun):
+          return elementwise_grad(lambda x: fun(x,x2)[:,i])
+        def grad_cov(x):
+          return np.array([row_grad(i, covariance)(x) for i in range(len(x))])[:,:,0]
+        def grad_grad_cov(x):
+          return np.array([row_grad(i, grad_cov)(x) for i in range(len(x))])[:,:,0]
+
         K_f_f = covariance(x, x)
-        K_f_df, K_df_df = value_and_grad(grad(covariance))(x)
+        print(K_f_f.shape)
+        print(K_f_f)
+        K_f_df = grad_cov(x)
+        print(K_f_df.shape)
+        print(K_f_df)
+        K_df_df = grad_grad_cov(x)
+        print(K_df_df.shape)
+        print(K_df_df)
 
         K = np.block([
           [K_f_f, K_f_df],
           [K_f_df, K_df_df]
         ]) + s
+        print(K.shape)
+        print(K)
 
         L = cholesky(K) + s
         a = solve(L, f_bnn)
