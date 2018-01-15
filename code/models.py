@@ -9,7 +9,8 @@ rs = npr.RandomState(0)
 
 
 def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
-                n_data=100, N_samples=20, kernel="rbf"):
+                n_data=100, N_samples=20, kernel="rbf",
+                match_gradients=False):
 
     covariance = kernel_dict[kernel]
 
@@ -126,8 +127,6 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
 
         return entropy
 
-
-
     def kl_objective(params, t):
         """
         Provides a stochastic estimate of the kl divergence
@@ -143,11 +142,14 @@ def map_gpp_bnn(layer_sizes, nonlinearity=np.tanh,
         bnn_weights = rs.randn(N_samples, N_weights) * np.exp(prior_log_std) + prior_mean
         x = np.random.uniform(low=-10, high=10, size=(n_data, 1))
 
-        bnn_predictions, bnn_gradients = value_and_grad(lambda x: predictions(bnn_weights, x)[:, :, 0].T)(x)
-
-        observation_logprob = np.mean(
-            log_gp_joint_gradient_and_prediction_prior(
-              bnn_predictions, bnn_gradients, x, t))
+        if match_gradients:
+          bnn_predictions, bnn_gradients = value_and_grad(lambda x: predictions(bnn_weights, x)[:, :, 0].T)(x)
+          observation_logprob = np.mean(
+              log_gp_joint_gradient_and_prediction_prior(
+                bnn_predictions, bnn_gradients, x, t))
+        else:
+          f_bnn = predictions(bnn_weights, x)[:, :, 0].T  # shape [N_data, N_weights_samples]
+          observation_logprob = np.mean(log_gp_prior(f_bnn, x,  t))
 
         kl = - entropy_estimate(f_bnn) - observation_logprob
         return kl
